@@ -125,6 +125,19 @@ td.r,th.r{text-align:right}
 .tp .grow{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tp select{min-height:28px;padding:2px 4px;font-size:12px;max-width:92px}
 .loan{color:var(--muted);font-style:italic}
+.av{width:28px;height:28px;border-radius:50%;flex:none;object-fit:cover;display:inline-grid;place-items:center;font-family:var(--display);font-weight:700;font-size:12px;color:#fff;vertical-align:middle;background:var(--sunk)}
+.av.s{width:22px;height:22px;font-size:10px}.av.l{width:72px;height:72px;font-size:26px}.av.m{width:44px;height:44px;font-size:16px}
+.nmrow{display:flex;align-items:center;gap:8px;min-width:0}
+.photo-pick{display:flex;align-items:center;gap:14px}
+.team-h .btn{padding:2px 8px;min-height:26px;font-size:12px}
+.swatches{display:flex;flex-wrap:wrap;gap:8px}
+.sw{position:relative;width:34px;height:34px;border-radius:8px;border:2px solid var(--line);cursor:pointer}
+.sw[aria-pressed="true"]{outline:3px solid var(--ink);outline-offset:2px}
+.pool{border:1.5px dashed var(--line);border-radius:10px;padding:10px;display:grid;gap:6px}
+.pool-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pool-row .who{display:flex;align-items:center;gap:6px;min-width:120px;flex:1}
+.tbtn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:4px 8px;display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:600;cursor:pointer;min-height:32px}
+.tbtn:hover{background:var(--sunk)}
 
 /* fixtures */
 .fx{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
@@ -343,7 +356,14 @@ const weeksDesc=()=>Object.values(S.weeks).sort((a,b)=>a.date<b.date?1:-1);
 const matchesOf=wid=>Object.values(S.matches).filter(m=>m.weekId===wid).sort((a,b)=>(a.order??0)-(b.order??0)||(a.at||0)-(b.at||0));
 const isLocked=w=>!!w&&(w.locked||matchesOf(w.id).some(m=>m.played));
 const teamName=(w,i)=>w.teams?.[i]?.name||('ทีม '+(i+1));
-const bibOf=(w,i)=>BIBS[w.teams?.[i]?.bib??i]||BIBS[0];
+const bibOf=(w,i)=>{const t=w.teams?.[i];return t?.color?{c:t.color}:(BIBS[t?.bib??i]||BIBS[0])};
+const PHOTO_MEM={};
+function avColor(id){let h=0;for(const ch of String(id))h=(h*31+ch.charCodeAt(0))>>>0;return `hsl(${h%360} 42% 42%)`}
+function avatar(id,sz){const p=P(id),cls='av'+(sz?' '+sz:'');if(!p)return `<span class="${cls}" aria-hidden="true">?</span>`;
+  const src=PHOTO_MEM[id]||(p.photoV&&API?`/api/photo?id=${encodeURIComponent(id)}&v=${p.photoV}`:null);
+  if(src)return `<img class="${cls}" src="${src}" alt="" loading="lazy">`;
+  const t=[...(nm(id)||'?')].find(c=>/[\p{L}\p{N}]/u.test(c)&&!'เแโใไ'.includes(c))||'?';
+  return `<span class="${cls}" style="background:${avColor(id)}" aria-hidden="true">${esc(t)}</span>`}
 const bibEl=(w,i)=>`<span class="bib" style="background:${bibOf(w,i).c}" aria-hidden="true"></span>`;
 const posTag=p=>p?`<span class="pos ${p.pos}">${POS_TH[p.pos]||''}</span>`:'';
 
@@ -381,12 +401,12 @@ function vHome(){
   for(const pk of Object.values(S.picks)){const wk=S.weeks[pk.weekId];if(!wk||!isLocked(wk))continue;const m=mgr[pk.manager]||(mgr[pk.manager]={id:pk.manager,total:0,wk:0,best:0,last:null,lastDate:''});const pts=pickPts(pk);m.total+=pts;m.wk++;m.best=Math.max(m.best,pts);if(wk.date>m.lastDate){m.lastDate=wk.date;m.last=pts}}
   const rows=Object.values(mgr).sort((a,b)=>b.total-a.total);
   out.push(`<section class="card"><div class="sec-h"><h2>ตารางคะแนนผู้จัดการ</h2><span class="small muted">รวมทั้งซีซั่น</span></div>
-   ${rows.length?`<div class="list">${rows.map((r,i)=>`<div class="li ${i===0?'top1':''}"><div class="rk">${i+1}</div><div><div class="nm">${esc(nm(r.id))}${r.id===S.me?' <span class="small muted">(คุณ)</span>':''}</div><div class="sub tn">${r.wk} สัปดาห์ · ล่าสุด ${fmt(r.last)} · ดีสุด ${fmt(r.best)}</div></div><div class="val big tn">${fmt(r.total)}</div></div>`).join('')}</div>`
+   ${rows.length?`<div class="list">${rows.map((r,i)=>`<div class="li ${i===0?'top1':''}"><div class="rk">${i+1}</div><div><div class="nm nmrow">${avatar(r.id,'s')}<span>${esc(nm(r.id))}${r.id===S.me?' <span class="small muted">(คุณ)</span>':''}</span></div><div class="sub tn">${r.wk} สัปดาห์ · ล่าสุด ${fmt(r.last)} · ดีสุด ${fmt(r.best)}</div></div><div class="val big tn">${fmt(r.total)}</div></div>`).join('')}</div>`
    :`<div class="empty small">ยังไม่มีแต้ม ตารางจะขึ้นหลังล็อกทีมและบันทึกผลแมตช์แรก</div>`}</section>`);
   // top players
   const top=Object.entries(c.season).filter(([id])=>P(id)).sort((a,b)=>b[1].pts-a[1].pts).slice(0,5);
   if(top.length)out.push(`<section class="card"><div class="sec-h"><h2>นักเตะแต้มสูงสุด</h2><button class="btn sm ghost" data-act="tab" data-k="players">ดูทั้งหมด</button></div>
-   <div class="list">${top.map(([id,s],i)=>`<div class="li clickable" data-act="profile" data-pid="${id}"><div class="rk">${i+1}</div><div><div class="nm">${esc(nm(id))} ${posTag(P(id))}</div><div class="sub tn">${s.g} ประตู · ${s.a} แอสซิสต์ · ${s.cs} คลีนชีต · ${s.mp} แมตช์</div></div><div class="val big tn">${fmt(s.pts)}</div></div>`).join('')}</div></section>`);
+   <div class="list">${top.map(([id,s],i)=>`<div class="li clickable" data-act="profile" data-pid="${id}"><div class="rk">${i+1}</div><div><div class="nm nmrow">${avatar(id)}<span>${esc(nm(id))}</span> ${posTag(P(id))}</div><div class="sub tn">${s.g} ประตู · ${s.a} แอสซิสต์ · ${s.cs} คลีนชีต · ${s.mp} แมตช์</div></div><div class="val big tn">${fmt(s.pts)}</div></div>`).join('')}</div></section>`);
   return out.join('');
 }
 function onboarding(){
@@ -411,20 +431,22 @@ function vWeek(){
   const unassigned=[...att].filter(id=>!assigned.has(id)&&P(id));
   const out=[head];
   out.push(`<section class="card"><div class="sec-h"><div><div class="eyebrow">ขั้นที่ 1</div><h2>เช็คชื่อคนมาเตะ</h2></div><span class="small muted tn">มา ${att.size} คน · บุก ${aC} · รับ ${dC}</span></div>
-   ${rs.length?`<div class="chips">${rs.map(p=>`<button class="chip" data-act="att" data-pid="${p.id}" aria-pressed="${att.has(p.id)}">${posTag(p)} ${esc(nm(p.id))}</button>`).join('')}</div>`:`<div class="small muted">ยังไม่มีนักเตะ ไปเพิ่มที่แท็บนักเตะก่อน</div>`}
+   ${rs.length?`<div class="chips">${rs.map(p=>`<button class="chip" data-act="att" data-pid="${p.id}" aria-pressed="${att.has(p.id)}">${avatar(p.id,'s')}${posTag(p)} ${esc(nm(p.id))}</button>`).join('')}</div>`:`<div class="small muted">ยังไม่มีนักเตะ ไปเพิ่มที่แท็บนักเตะก่อน</div>`}
    <div class="row"><button class="btn sm ghost" data-act="newPlayer">+ เพิ่มนักเตะใหม่</button></div></section>`);
   out.push(`<section class="card"><div class="sec-h"><div><div class="eyebrow">ขั้นที่ 2</div><h2>จัดทีม</h2></div>
-    <div class="row"><select id="nTeams" aria-label="จำนวนทีม">${[2,3,4,5].map(n=>`<option value="${n}" ${n===((w.teams||[]).length||autoN)?'selected':''}>${n} ทีม</option>`).join('')}</select><button class="btn" data-act="gen" ${played?'disabled':''}>จัดทีมอัตโนมัติ</button></div></div>
-    <p class="small muted" style="margin:0">ระบบเรียงตามฟอร์ม แล้วแจกตัวบุกกับตัวรับสลับแบบงู ให้แต่ละทีมใกล้เคียงกัน ย้ายคนเองได้ ${played?'<br><b>มีแมตช์ที่บันทึกผลแล้ว จึงจัดทีมใหม่ไม่ได้ แต่ยังย้ายคนได้</b>':''}</p>
+    <div class="row"><select id="nTeams" aria-label="จำนวนทีม">${[2,3,4,5].map(n=>`<option value="${n}" ${n===((w.teams||[]).length||autoN)?'selected':''}>${n} ทีม</option>`).join('')}</select><button class="btn" data-act="gen" ${played?'disabled':''}>จัดอัตโนมัติ</button><button class="btn" data-act="manual" ${played?'disabled':''}>จัดเอง</button></div></div>
+    <p class="small muted" style="margin:0">จัดอัตโนมัติ: เรียงตามฟอร์มแล้วแจกตัวบุกกับตัวรับให้แต่ละทีมใกล้เคียงกัน · จัดเอง: สร้างทีมว่าง แล้วกดสีทีมข้างชื่อคนเพื่อใส่ทีม ${played?'<br><b>มีแมตช์ที่บันทึกผลแล้ว จึงเริ่มจัดใหม่ทั้งหมดไม่ได้ แต่ยังย้ายคน แก้ชื่อ แก้สีได้</b>':''}</p>
+    ${unassigned.length&&(w.teams||[]).length?`<div class="pool"><div class="small"><b>ยังไม่มีทีม ${unassigned.length} คน</b> <span class="muted">กดทีมที่จะใส่</span></div>
+      ${unassigned.map(id=>`<div class="pool-row"><span class="who">${avatar(id,'s')}${posTag(P(id))} ${esc(nm(id))}</span><span class="row wrapx" style="gap:4px">${w.teams.map((t,j)=>`<button class="tbtn" data-act="assign" data-pid="${id}" data-t="${j}">${bibEl(w,j)}${esc(t.name)}</button>`).join('')}</span></div>`).join('')}</div>`:''}
     ${(w.teams||[]).length?`<div class="teams">${w.teams.map((t,i)=>teamCard(w,t,i)).join('')}</div>`:''}
-    ${unassigned.length&&(w.teams||[]).length?`<div class="small"><b>ยังไม่มีทีม:</b> ${unassigned.map(id=>`<span class="row" style="display:inline-flex;margin:2px 8px 2px 0">${esc(nm(id))} <select data-change="move" data-pid="${id}" data-from="-1" aria-label="ใส่ทีม"><option value="">ใส่ทีม…</option>${w.teams.map((t,j)=>`<option value="${j}">${esc(t.name)}</option>`).join('')}</select></span>`).join('')}</div>`:''}
+    ${(w.teams||[]).length?`<div class="row wrapx">${w.teams.length<8?`<button class="btn sm" data-act="addTeam">+ เพิ่มทีม</button>`:''}<button class="btn sm" data-act="refix">จัดโปรแกรมพบกันหมดใหม่</button><span class="small muted grow">แมตช์ที่บันทึกผลแล้วจะไม่ถูกลบ</span></div>`:''}
   </section>`);
   const pts=calc().byWeek[w.id]||{};
   out.push(`<section class="card"><div class="sec-h"><div><div class="eyebrow">ขั้นที่ 3</div><h2>โปรแกรมและผล</h2></div>
    <div class="row">${(w.teams||[]).length>=2?`<button class="btn sm" data-act="addMatch">+ เพิ่มแมตช์</button>`:''}</div></div>
    <div class="row wrapx small"><span class="grow muted">${locked?'ทีม Fantasy ล็อกแล้ว':'ทีม Fantasy ยังเปิดให้เลือก จะล็อกเองเมื่อบันทึกผลแมตช์แรก'}</span>
      ${!played?`<button class="btn sm" data-act="lock">${w.locked?'ปลดล็อกการเลือกทีม':'ล็อกการเลือกทีมเลย'}</button>`:''}</div>
-   ${ms.length?`<div>${ms.map(m=>fixture(w,m)).join('')}</div>`:`<div class="empty small">ยังไม่มีแมตช์ กดจัดทีมอัตโนมัติ ระบบจะจัดโปรแกรมพบกันหมดให้</div>`}</section>`);
+   ${ms.length?`<div>${ms.map(m=>fixture(w,m)).join('')}</div>`:`<div class="empty small">ยังไม่มีแมตช์ จัดทีมแล้วระบบจะจัดโปรแกรมพบกันหมดให้ หรือกด + เพิ่มแมตช์</div>`}</section>`);
   const tops=Object.entries(pts).filter(([id])=>P(id)).sort((a,b)=>b[1].pts-a[1].pts);
   if(tops.length)out.push(`<section class="card"><h2>แต้มนักเตะสัปดาห์นี้</h2><div class="tbl-wrap"><table><thead><tr><th>นักเตะ</th><th class="r">แมตช์</th><th class="r">ยิง</th><th class="r">แอส</th><th class="r">คลีนชีต</th><th class="r">เสีย</th><th class="r">แต้ม</th></tr></thead><tbody>
     ${tops.map(([id,s])=>`<tr class="clickable" data-act="profile" data-pid="${id}"><td>${posTag(P(id))} ${esc(nm(id))}</td><td class="r tn">${s.mp}</td><td class="r tn">${s.g}</td><td class="r tn">${s.a}</td><td class="r tn">${s.cs}</td><td class="r tn">${s.con}</td><td class="r num">${fmt(s.pts)}</td></tr>`).join('')}</tbody></table></div></section>`);
@@ -433,8 +455,8 @@ function vWeek(){
 function teamCard(w,t,i){
   const pl=(t.players||[]).filter(P);
   const pw=pl.reduce((a,id)=>a+priceInfo(id,w.date).price,0);
-  const line=(id)=>`<div class="tp">${posTag(P(id))}<span class="grow">${esc(nm(id))}</span><select data-change="move" data-pid="${id}" data-from="${i}" aria-label="ย้าย ${esc(nm(id))}"><option value="">ย้าย…</option>${w.teams.map((x,j)=>j===i?'':`<option value="${j}">${esc(x.name)}</option>`).join('')}<option value="-1">เอาออก</option></select></div>`;
-  return `<div class="team"><div class="team-h">${bibEl(w,i)}<span class="grow">${esc(t.name)}</span><span class="small muted tn" title="ผลรวมราคานักเตะ">พลัง ${pw}</span></div>
+  const line=(id)=>`<div class="tp">${avatar(id,'s')}${posTag(P(id))}<span class="grow">${esc(nm(id))}</span><select data-change="move" data-pid="${id}" data-from="${i}" aria-label="ย้าย ${esc(nm(id))}"><option value="">ย้าย…</option>${w.teams.map((x,j)=>j===i?'':`<option value="${j}">${esc(x.name)}</option>`).join('')}<option value="-1">เอาออก</option></select></div>`;
+  return `<div class="team"><div class="team-h">${bibEl(w,i)}<span class="grow">${esc(t.name)}</span><span class="small muted tn" title="ผลรวมราคานักเตะ">พลัง ${pw} · ${pl.length} คน</span><button class="btn ghost" data-act="editTeam" data-t="${i}">แก้</button></div>
    <div class="team-b">${pl.filter(id=>P(id).pos==='ATT').map(line).join('')}${pl.filter(id=>P(id).pos==='DEF').map(line).join('')}
    ${(t.loans||[]).map((n,k)=>`<div class="tp loan"><span class="pos" style="background:var(--sunk);color:var(--muted)">ยืม</span><span class="grow">${esc(n)}</span><button class="btn sm ghost" data-act="rmLoan" data-t="${i}" data-k="${k}" aria-label="ลบ">×</button></div>`).join('')}
    <div class="row" style="margin-top:6px"><button class="btn sm ghost" data-act="addLoan" data-t="${i}">+ ยืมตัว (ไม่นับแต้ม)</button></div></div></div>`;
@@ -475,7 +497,7 @@ function vTeam(){
     .map(p=>({p,...priceInfo(p.id,w.date)})).sort((a,b)=>b.price-a.price||nm(a.p.id).localeCompare(nm(b.p.id),'th'));
   const cost=d.players.reduce((s,id)=>s+priceInfo(id,w.date).price,0),left=cfg.budget-cost,over=left<0;
   const slots=[...Array(cfg.squad)].map((_,i)=>{const id=d.players[i];if(!id)return `<div class="slot"><span class="muted small">ช่องที่ ${i+1}</span><span class="muted small">ว่าง</span></div>`;
-    return `<div class="slot f"><div>${posTag(P(id))}</div><div class="n">${esc(nm(id))}</div><div class="row" style="justify-content:center"><span class="num">${priceInfo(id,w.date).price}</span>${cfg.captain>1?`<button class="cap" data-act="cap" data-pid="${id}" aria-pressed="${d.captain===id}">C ×${fmt(cfg.captain)}</button>`:''}</div></div>`}).join('');
+    return `<div class="slot f"><div style="display:grid;justify-items:center;gap:4px">${avatar(id,'m')}${posTag(P(id))}</div><div class="n">${esc(nm(id))}</div><div class="row" style="justify-content:center"><span class="num">${priceInfo(id,w.date).price}</span>${cfg.captain>1?`<button class="cap" data-act="cap" data-pid="${id}" aria-pressed="${d.captain===id}">C ×${fmt(cfg.captain)}</button>`:''}</div></div>`}).join('');
   const ok=d.players.length===cfg.squad&&!over&&(cfg.captain<=1||d.players.includes(d.captain));
   return head+`<section class="card"><div class="sec-h"><div><div class="eyebrow">${esc(thDate(w.date,true))}</div><h2>ทีม Fantasy ของ ${esc(nm(S.me))}</h2></div>${ex?'<span class="pill ok">บันทึกแล้ว</span>':'<span class="pill warn">ยังไม่ได้ส่งทีม</span>'}</div>
    <div class="budget"><div class="row small"><span class="grow">ใช้ไป <b class="tn">${cost}</b> / ${cfg.budget}</span><b class="tn" style="color:${over?'var(--bad)':'var(--good)'}">${over?'เกินงบ '+(-left):'เหลือ '+left}</b></div><div class="bar ${over?'over':''}"><i style="width:${clamp(cost/cfg.budget*100,0,100)}%"></i></div></div>
@@ -483,7 +505,7 @@ function vTeam(){
    <div class="row wrapx"><button class="btn pri" data-act="savePick" ${ok?'':'disabled'}>${ex?'อัปเดตทีม':'ส่งทีม'}</button>
    <span class="small muted grow">${d.players.length<cfg.squad?`เลือกอีก ${cfg.squad-d.players.length} คน`:over?'เกินงบ เปลี่ยนตัวที่ถูกกว่า':cfg.captain>1&&!d.players.includes(d.captain)?'กดปุ่ม C เลือกกัปตัน 1 คน':'พร้อมส่ง แก้ได้จนกว่าจะล็อก'}</span></div></section>
   <section class="card"><div class="sec-h"><h2>ตลาดนักเตะ</h2><span class="small muted">${att.length?'เฉพาะคนที่เช็คชื่อมาสัปดาห์นี้':'ยังไม่เช็คชื่อ จึงแสดงทุกคน'}</span></div>
-   <div class="list" style="gap:2px">${pool.map(({p,price,form})=>`<button class="pk" data-act="pick" data-pid="${p.id}" aria-pressed="${d.players.includes(p.id)}"><span>${posTag(p)} <b>${esc(nm(p.id))}</b><br><span class="small muted">${form==null?'ยังไม่มีฟอร์ม':'ฟอร์ม '+fmt(form)+' แต้ม/สัปดาห์'}</span></span><span></span><span class="price">${price}</span></button>`).join('')||'<div class="empty small">ไม่มีนักเตะให้เลือก</div>'}</div></section>`;
+   <div class="list" style="gap:2px">${pool.map(({p,price,form})=>`<button class="pk" data-act="pick" data-pid="${p.id}" aria-pressed="${d.players.includes(p.id)}" style="grid-template-columns:auto 1fr auto"><span>${avatar(p.id,'m')}</span><span>${posTag(p)} <b>${esc(nm(p.id))}</b><br><span class="small muted">${form==null?'ยังไม่มีฟอร์ม':'ฟอร์ม '+fmt(form)+' แต้ม/สัปดาห์'}</span></span><span class="price">${price}</span></button>`).join('')||'<div class="empty small">ไม่มีนักเตะให้เลือก</div>'}</div></section>`;
 }
 function lockedView(w){
   const pk=Object.values(S.picks).filter(x=>x.weekId===w.id).map(x=>({...x,pts:pickPts(x)})).sort((a,b)=>b.pts-a.pts);
@@ -503,7 +525,7 @@ function vPlayers(){
   return `<section class="card"><div class="sec-h"><div><div class="eyebrow">Power Ranking</div><h2>นักเตะ ${rows.length} คน</h2></div><button class="btn pri" data-act="newPlayer">+ เพิ่มนักเตะ</button></div>
    <p class="small muted" style="margin:0">เรียงตามฟอร์ม (แต้มเฉลี่ย ${S.config.formWeeks} สัปดาห์ล่าสุดที่มาเตะ) ราคาขึ้นลงตามฟอร์มทุกสัปดาห์</p>
    ${rows.length?`<div class="list">${rows.map((r,i)=>`<div class="li clickable ${i===0&&r.cur.form!=null?'top1':''}" data-act="profile" data-pid="${r.p.id}"><div class="rk">${i+1}</div>
-    <div><div class="nm">${esc(nm(r.p.id))} ${posTag(r.p)}${r.p.id===S.me?' <span class="small muted">(คุณ)</span>':''}</div><div class="sub tn">${r.cur.form==null?'ยังไม่มีฟอร์ม':'ฟอร์ม '+fmt(r.cur.form)}  · รวม ${fmt(r.s.pts)} แต้ม · ${r.s.g} ประตู · ${r.s.a} แอส</div></div>
+    <div><div class="nm nmrow">${avatar(r.p.id)}<span>${esc(nm(r.p.id))}</span> ${posTag(r.p)}${r.p.id===S.me?' <span class="small muted">(คุณ)</span>':''}</div><div class="sub tn">${r.cur.form==null?'ยังไม่มีฟอร์ม':'ฟอร์ม '+fmt(r.cur.form)}  · รวม ${fmt(r.s.pts)} แต้ม · ${r.s.g} ประตู · ${r.s.a} แอส</div></div>
     <div class="val"><div class="big tn">${r.cur.price}</div>${r.diff?`<div class="trend ${r.diff>0?'up':'dn'}">${r.diff>0?'▲':'▼'} ${Math.abs(r.diff)}</div>`:'<div class="trend muted">ราคา</div>'}</div></div>`).join('')}</div>`
    :`<div class="empty">ยังไม่มีนักเตะ</div>`}</section>
    ${mgrs.length?`<section class="card"><h2>ผู้จัดการอย่างเดียว (ไม่ได้เตะ)</h2><div class="chips">${mgrs.map(p=>`<button class="chip" data-act="editPlayer" data-pid="${p.id}">${esc(nm(p.id))}</button>`).join('')}</div></section>`:''}`;
@@ -511,26 +533,47 @@ function vPlayers(){
 function openProfile(pid){
   const p=P(pid);if(!p)return;const c=calc(),cur=priceInfo(pid,NOW),s=c.season[pid]||blank();
   const hist=c.weeksAsc.slice().reverse().filter(w=>c.byWeek[w.id]?.[pid]);
-  modal(`<div class="sec-h"><div><div class="eyebrow">${p.pos==='DEF'?'ตัวรับ':'ตัวบุก'}${p.managerOnly?' · ผู้จัดการอย่างเดียว':''}</div><h3>${esc(p.name)}${p.nick&&p.nick!==p.name?` <span class="muted">"${esc(p.nick)}"</span>`:''}</h3></div><div style="text-align:right"><div class="big">${cur.price}</div><div class="small muted">ราคาตอนนี้</div></div></div>
+  modal(`<div class="sec-h"><div class="nmrow" style="gap:14px">${avatar(pid,'l')}<div><div class="eyebrow">${p.pos==='DEF'?'ตัวรับ':'ตัวบุก'}${p.managerOnly?' · ผู้จัดการอย่างเดียว':''}</div><h3>${esc(p.name)}${p.nick&&p.nick!==p.name?` <span class="muted">"${esc(p.nick)}"</span>`:''}</h3></div></div><div style="text-align:right"><div class="big">${cur.price}</div><div class="small muted">ราคาตอนนี้</div></div></div>
    <div class="stats"><div class="stat"><b>${fmt(s.pts)}</b><span>แต้มรวม</span></div><div class="stat"><b>${cur.form==null?'–':fmt(cur.form)}</b><span>ฟอร์ม</span></div><div class="stat"><b>${s.wk||0}</b><span>สัปดาห์ที่มา</span></div><div class="stat"><b>${s.mp}</b><span>แมตช์</span></div><div class="stat"><b>${s.g}</b><span>ประตู</span></div><div class="stat"><b>${s.a}</b><span>แอสซิสต์</span></div><div class="stat"><b>${s.cs}</b><span>คลีนชีต</span></div><div class="stat"><b>${s.w}</b><span>ชนะ</span></div></div>
    ${hist.length?`<div class="tbl-wrap"><table><thead><tr><th>สัปดาห์</th><th class="r">แมตช์</th><th class="r">ยิง</th><th class="r">แอส</th><th class="r">เสีย</th><th class="r">แต้ม</th></tr></thead><tbody>${hist.map(w=>{const x=c.byWeek[w.id][pid];return `<tr><td>${esc(thDate(w.date))}</td><td class="r tn">${x.mp}</td><td class="r tn">${x.g}</td><td class="r tn">${x.a}</td><td class="r tn">${x.con}</td><td class="r num">${fmt(x.pts)}</td></tr>`}).join('')}</tbody></table></div>`:'<div class="small muted">ยังไม่มีประวัติการเตะ</div>'}
    <div class="row wrapx"><button class="btn" data-act="editPlayer" data-pid="${pid}">แก้ข้อมูล</button>${S.me!==pid?`<button class="btn" data-act="setMe" data-pid="${pid}">นี่คือฉัน</button>`:''}<span class="grow"></span><button class="btn ghost" data-act="close">ปิด</button></div>`);
 }
+function shrink(file){return new Promise((ok,bad)=>{const url=URL.createObjectURL(file),img=new Image();
+  img.onload=()=>{const S2=320,c=document.createElement('canvas');c.width=c.height=S2;const m=Math.min(img.width,img.height);
+    c.getContext('2d').drawImage(img,(img.width-m)/2,(img.height-m)/2*0.6,m,m,0,0,S2,S2);URL.revokeObjectURL(url);ok(c.toDataURL('image/jpeg',0.82))};
+  img.onerror=()=>{URL.revokeObjectURL(url);bad()};img.src=url})}
+async function sendPhoto(id,dataUrl){
+  if(dataUrl)PHOTO_MEM[id]=dataUrl;else delete PHOTO_MEM[id];
+  if(!API)return;
+  const r=await fetch('/api/data',{method:'POST',headers:{'content-type':'application/json','x-pin':lsGet('f7_pin')||''},body:JSON.stringify({op:dataUrl?'photo':'unphoto',col:'players',id,photo:dataUrl})});
+  if(r.status===401){lsSet('f7_pin',null);askPin();throw{code:'ต้องใส่รหัสก๊วน'}}
+  if(!r.ok)throw{code:(await r.json().catch(()=>({}))).error||r.status};
+}
 function openPlayerForm(pid){
-  const p=pid?P(pid):{name:'',nick:'',pos:'ATT',managerOnly:false};let pos=p.pos,mo=!!p.managerOnly,delArm=false;
+  const p=pid?{...P(pid)}:{name:'',nick:'',pos:'ATT',managerOnly:false};let pos=p.pos,mo=!!p.managerOnly,delArm=false,photo=null,rmPhoto=false;
+  const keep=()=>{p.name=$('#pfName').value;p.nick=$('#pfNick').value;mo=$('#pfMo').checked};
+  const prev=()=>photo?`<img class="av l" src="${photo}" alt="">`:(pid&&!rmPhoto&&(P(pid)?.photoV||PHOTO_MEM[pid]))?avatar(pid,'l'):`<span class="av l" style="background:var(--sunk);color:var(--muted)">รูป</span>`;
   const draw=()=>modal(`<h3>${pid?'แก้ข้อมูลนักเตะ':'เพิ่มนักเตะ'}</h3>
+   <div class="photo-pick">${prev()}<div class="row wrapx"><label class="btn sm" for="pfPhoto" style="display:inline-flex;align-items:center">${photo||(pid&&P(pid)?.photoV&&!rmPhoto)?'เปลี่ยนรูป':'ใส่รูปหน้า'}</label><input type="file" id="pfPhoto" accept="image/*" hidden>${photo||(pid&&P(pid)?.photoV&&!rmPhoto)?'<button class="btn sm ghost" data-act="pfRmPhoto">เอารูปออก</button>':''}</div></div>
    <div class="field"><label for="pfName">ชื่อ</label><input type="text" id="pfName" value="${esc(p.name)}" placeholder="เช่น ธนพล"></div>
    <div class="field"><label for="pfNick">ชื่อเล่น (ใช้แสดงผล)</label><input type="text" id="pfNick" value="${esc(p.nick)}" placeholder="เช่น บอส"></div>
    <div class="field"><label>ตำแหน่ง</label><div class="seg"><button data-act="pfPos" data-v="ATT" aria-pressed="${pos==='ATT'}">บุก</button><button data-act="pfPos" data-v="DEF" aria-pressed="${pos==='DEF'}">รับ</button></div></div>
    <label class="row small"><input type="checkbox" id="pfMo" ${mo?'checked':''}> เป็นผู้จัดการอย่างเดียว ไม่ได้ลงเตะ</label>
    <div class="row wrapx"><button class="btn pri" data-act="pfSave">บันทึก</button><button class="btn ghost" data-act="close">ยกเลิก</button><span class="grow"></span>${pid?`<button class="btn danger sm" data-act="pfDel">${delArm?'กดอีกครั้งเพื่อลบ':'ลบนักเตะ'}</button>`:''}</div>`,{
-    pfPos:(el)=>{p.name=$('#pfName').value;p.nick=$('#pfNick').value;mo=$('#pfMo').checked;pos=el.dataset.v;draw()},
-    pfDel:async()=>{if(!delArm){p.name=$('#pfName').value;p.nick=$('#pfNick').value;delArm=true;draw();return}closeModal();await save(()=>store.del('players',pid),'ลบแล้ว')},
+    pfPos:(el)=>{keep();pos=el.dataset.v;draw();bindPhoto()},
+    pfRmPhoto:()=>{keep();photo=null;rmPhoto=true;draw();bindPhoto()},
+    pfDel:async()=>{if(!delArm){keep();delArm=true;draw();bindPhoto();return}closeModal();await save(async()=>{if(P(pid)?.photoV)await sendPhoto(pid,null).catch(()=>{});await store.del('players',pid)},'ลบแล้ว')},
     pfSave:async()=>{const name=$('#pfName').value.trim(),nick=$('#pfNick').value.trim();if(!name&&!nick){toast('ใส่ชื่อหรือชื่อเล่นก่อน',true);return}
       const id=pid||rid('p_');const base=pid?strip(clone(P(pid))):{createdAt:Date.now()};
-      closeModal();await save(()=>store.set('players',id,{...base,name:name||nick,nick:nick||name,pos,managerOnly:$('#pfMo')?.checked??mo}),pid?'บันทึกแล้ว':'เพิ่ม '+(nick||name)+' แล้ว')}
+      const doc={...base,name:name||nick,nick:nick||name,pos,managerOnly:$('#pfMo')?.checked??mo};
+      closeModal();
+      await save(async()=>{
+        if(photo){await sendPhoto(id,photo);doc.photoV=Date.now()}
+        else if(rmPhoto&&base.photoV){await sendPhoto(id,null);delete doc.photoV}
+        await store.set('players',id,doc)},pid?'บันทึกแล้ว':'เพิ่ม '+(nick||name)+' แล้ว')}
   });
-  draw();setTimeout(()=>$('#pfName')?.focus(),30);
+  const bindPhoto=()=>{const inp=$('#pfPhoto');if(inp)inp.onchange=async()=>{const f=inp.files[0];if(!f)return;try{keep();photo=await shrink(f);rmPhoto=false;draw();bindPhoto()}catch{toast('อ่านรูปนี้ไม่ได้ ลองรูปอื่น',true)}}};
+  draw();bindPhoto();setTimeout(()=>$('#pfName')?.focus(),30);
 }
 
 /* ----- rules ----- */
@@ -577,13 +620,13 @@ function renderRecord(){
   let step='';
   if(R.step&&!R.step.scorer){const s=R.step.side,o=s==='a'?'b':'a';
     step=`<div class="stepbox"><b>ใครยิงให้ ${esc(teamName(w,s==='a'?m.a:m.b))}?</b>
-     <div class="chips">${team(s).map(id=>`<button class="chip" data-act="rcScorer" data-pid="${id}">${posTag(P(id))} ${esc(nm(id))}</button>`).join('')}<button class="chip" data-act="rcScorer" data-pid="loan">ผู้เล่นยืมตัว${hasLoan(s)?'':' / โกล'}</button></div>
+     <div class="chips">${team(s).map(id=>`<button class="chip" data-act="rcScorer" data-pid="${id}">${avatar(id,'s')}${posTag(P(id))} ${esc(nm(id))}</button>`).join('')}<button class="chip" data-act="rcScorer" data-pid="loan">ผู้เล่นยืมตัว${hasLoan(s)?'':' / โกล'}</button></div>
      <div class="small muted">หรือฝ่ายตรงข้ามทำเข้าประตูตัวเอง</div>
      <div class="chips">${team(o).map(id=>`<button class="chip" data-act="rcOG" data-pid="${id}">${esc(nm(id))}</button>`).join('')}</div>
      <div><button class="btn sm ghost" data-act="rcCancel">ยกเลิก</button></div></div>`}
   else if(R.step){const s=R.step.side;
     step=`<div class="stepbox"><b>ใครแอสซิสต์ให้ ${esc(nm(R.step.scorer))}?</b>
-     <div class="chips">${team(s).filter(id=>id!==R.step.scorer).map(id=>`<button class="chip" data-act="rcAssist" data-pid="${id}">${esc(nm(id))}</button>`).join('')}<button class="chip" data-act="rcAssist" data-pid="">ไม่มีแอสซิสต์</button></div></div>`}
+     <div class="chips">${team(s).filter(id=>id!==R.step.scorer).map(id=>`<button class="chip" data-act="rcAssist" data-pid="${id}">${avatar(id,'s')}${esc(nm(id))}</button>`).join('')}<button class="chip" data-act="rcAssist" data-pid="">ไม่มีแอสซิสต์</button></div></div>`}
   modal(`<div class="sec-h"><h3>บันทึกผล</h3><span class="small muted">${esc(thDate(w.date))}</span></div>
    <div class="board"><div class="t">${bibEl(w,m.a)}<span>${esc(teamName(w,m.a))}</span></div><div class="s tn">${a} – ${b}</div><div class="t">${bibEl(w,m.b)}<span>${esc(teamName(w,m.b))}</span></div>
     <div style="display:grid;justify-items:center"><button class="btn" data-act="rcGoal" data-s="a" ${R.step?'disabled':''}>+ ประตู</button></div><span></span><div style="display:grid;justify-items:center"><button class="btn" data-act="rcGoal" data-s="b" ${R.step?'disabled':''}>+ ประตู</button></div></div>
@@ -603,6 +646,33 @@ function renderRecord(){
 }
 
 /* ---------- team generation ---------- */
+async function rebuildFixtures(wid,n){
+  const ms=matchesOf(wid);for(const m of ms)if(!m.played)await store.del('matches',m.id);
+  const played=ms.filter(m=>m.played),has=new Set(played.map(m=>[m.a,m.b].sort().join('-')));
+  let o=played.reduce((x,m)=>Math.max(x,m.order??0),-1)+1;
+  for(const [a,b] of roundRobin(n)){if(has.has([a,b].sort().join('-')))continue;await store.set('matches',rid('m_'),{weekId:wid,a,b,order:o++,played:false,events:[],votes:{}})}
+}
+const SWATCH=['#EE7A2E','#D93A3A','#E85A9B','#8E4FD1','#2F5BD3','#23A3C9','#1E9E62','#8BC34A','#EBC11B','#8D6E4F','#F4F4F0','#9AA09A','#26292A'];
+function openTeamEdit(i){
+  const w=S.weeks[S.weekId],t=w.teams[i];let color=bibOf(w,i).c,delArm=false;
+  const usedInMatch=matchesOf(w.id).some(m=>m.a===i||m.b===i);
+  const draw=()=>{const nameV=$('#teName')?.value??t.name;modal(`<h3>แก้ทีม</h3>
+    <div class="field"><label for="teName">ชื่อทีม</label><input type="text" id="teName" maxlength="30" value="${esc(nameV)}"></div>
+    <div class="field"><label>สีเสื้อ/เอี๊ยม</label><div class="swatches">${SWATCH.map(c=>`<button class="sw" data-act="teColor" data-c="${c}" style="background:${c}" aria-label="สี ${c}" aria-pressed="${c.toLowerCase()===String(color).toLowerCase()}"></button>`).join('')}
+      <label class="sw" style="display:grid;place-items:center;font-size:11px;background:var(--surface)" title="สีอื่น">อื่นๆ<input type="color" id="teCustom" value="${color}" style="position:absolute;opacity:0;width:1px;height:1px"></label></div></div>
+    <div class="row"><span class="bib" style="background:${color};width:22px;height:28px"></span><span class="small muted">ตัวอย่างสี</span></div>
+    <div class="row wrapx"><button class="btn pri" data-act="teSave">บันทึก</button><button class="btn ghost" data-act="close">ยกเลิก</button><span class="grow"></span>
+      <button class="btn danger sm" data-act="teDel" ${usedInMatch&&matchesOf(w.id).some(m=>m.played&&(m.a===i||m.b===i))?'disabled title="ทีมนี้มีผลแมตช์แล้ว"':''}>${delArm?'กดอีกครั้งเพื่อลบทีม':'ลบทีม'}</button></div>`,{
+    teColor:el=>{color=el.dataset.c;draw()},
+    teSave:async()=>{const name=$('#teName').value.trim()||t.name;const teams=clone(S.weeks[S.weekId].teams);teams[i].name=name;teams[i].color=color;closeModal();await save(()=>store.merge('weeks',w.id,{teams}),'บันทึกทีมแล้ว')},
+    teDel:async()=>{if(!delArm){delArm=true;draw();return}closeModal();
+      await save(async()=>{const teams=clone(S.weeks[S.weekId].teams);teams.splice(i,1);
+        for(const m of matchesOf(w.id)){if(m.a===i||m.b===i){await store.del('matches',m.id);continue}
+          if(m.a>i||m.b>i)await store.merge('matches',m.id,{a:m.a>i?m.a-1:m.a,b:m.b>i?m.b-1:m.b})}
+        await store.merge('weeks',w.id,{teams})},'ลบทีมแล้ว คนในทีมกลับไปอยู่ในรายชื่อยังไม่มีทีม')}
+  });const cu=$('#teCustom');if(cu)cu.oninput=()=>{color=cu.value;draw()}};
+  draw();
+}
 function buildTeams(ids,n,date,posMap){
   const pos=i=>P(i)?.pos||posMap?.[i];
   const form=id=>{const f=priceInfo(id,date);return (f.form??(f.price-S.config.priceBase)/S.config.priceSlope)+Math.random()*0.01};
@@ -638,9 +708,15 @@ const ACT={
     const n=+$('#nTeams').value,ids=(w.attendees||[]).filter(id=>P(id)&&!P(id).managerOnly);
     if(ids.length<n*2){toast('คนมายังน้อยไปสำหรับ '+n+' ทีม',true);return}
     const teams=buildTeams(ids,n,w.date);
-    await save(async()=>{for(const m of matchesOf(w.id))await store.del('matches',m.id);
-      await store.merge('weeks',w.id,{teams});
-      let o=0;for(const [a,b] of roundRobin(n))await store.set('matches',rid('m_'),{weekId:w.id,a,b,order:o++,played:false,events:[],votes:{}});},'จัดทีมและโปรแกรมแล้ว')},
+    await save(async()=>{await store.merge('weeks',w.id,{teams});await rebuildFixtures(w.id,n)},'จัดทีมและโปรแกรมแล้ว')},
+  manual:()=>{const w=S.weeks[S.weekId];if(matchesOf(w.id).some(m=>m.played)){toast('มีแมตช์บันทึกผลแล้ว เริ่มจัดใหม่ไม่ได้',true);return}
+    const n=+$('#nTeams').value;const teams=[...Array(n)].map((_,i)=>({name:'ทีม'+BIBS[i%BIBS.length].n,bib:i%BIBS.length,players:[],loans:[]}));
+    save(async()=>{await store.merge('weeks',w.id,{teams});await rebuildFixtures(w.id,n)},'สร้าง '+n+' ทีมว่างแล้ว ใส่คนได้เลย')},
+  assign:async el=>{const w=S.weeks[S.weekId],teams=clone(w.teams),pid=el.dataset.pid;teams.forEach(t=>t.players=t.players.filter(x=>x!==pid));teams[+el.dataset.t].players.push(pid);await save(()=>store.merge('weeks',w.id,{teams}))},
+  addTeam:async()=>{const w=S.weeks[S.weekId],teams=clone(w.teams),used=new Set(teams.map(t=>t.bib));const b=[...BIBS.keys()].find(i=>!used.has(i))??0;
+    teams.push({name:'ทีม'+(used.has(b)?' '+(teams.length+1):BIBS[b].n),bib:b,players:[],loans:[]});await save(()=>store.merge('weeks',w.id,{teams}),'เพิ่มทีมแล้ว')},
+  refix:async()=>{const w=S.weeks[S.weekId];await save(()=>rebuildFixtures(w.id,w.teams.length),'จัดโปรแกรมใหม่แล้ว')},
+  editTeam:el=>openTeamEdit(+el.dataset.t),
   addLoan:el=>{const i=+el.dataset.t;modal(`<h3>เพิ่มผู้เล่นยืมตัว</h3><p class="small muted" style="margin:0">ยืมตัวไม่ได้แต้ม Fantasy แต่ประตูยังนับในสกอร์</p><div class="field"><label for="lnName">ชื่อ</label><input type="text" id="lnName" placeholder="เช่น โกลยืม, เพื่อนพี่ตูน"></div>
     <div class="row"><button class="btn pri" data-act="lnSave">เพิ่ม</button><button class="btn ghost" data-act="close">ยกเลิก</button></div>`,{
     lnSave:async()=>{const v=$('#lnName').value.trim();if(!v)return;closeModal();const w=S.weeks[S.weekId],teams=clone(w.teams);(teams[i].loans||(teams[i].loans=[])).push(v);await save(()=>store.merge('weeks',w.id,{teams}))}});setTimeout(()=>$('#lnName')?.focus(),30)},

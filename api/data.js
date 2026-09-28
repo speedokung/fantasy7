@@ -42,6 +42,15 @@ export default async function handler(req, res) {
       if (pin && req.headers['x-pin'] !== pin) return res.status(401).json({ error: 'bad_pin' });
       const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body || {};
       const { op, col, id, data } = body;
+      if (op === 'photo' || op === 'unphoto') {
+        if (!ID_RE.test(String(id || ''))) return res.status(400).json({ error: 'bad_path' });
+        if (op === 'unphoto') { await redis.hdel('f7:photos', id); return res.json({ ok: true }); }
+        const ph = String(body.photo || '');
+        if (!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(ph) || ph.length > 400000)
+          return res.status(400).json({ error: 'bad_photo' });
+        await redis.hset('f7:photos', { [id]: ph });
+        return res.json({ ok: true });
+      }
       if (!COLS.includes(col) || !ID_RE.test(String(id || ''))) return res.status(400).json({ error: 'bad_path' });
       if (data !== undefined && (typeof data !== 'object' || Array.isArray(data) || JSON.stringify(data).length > 200000))
         return res.status(400).json({ error: 'bad_data' });
