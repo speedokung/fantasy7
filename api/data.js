@@ -1,12 +1,7 @@
-import { Redis } from '@upstash/redis';
-
-const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
-const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
-const redis = url && token ? new Redis({ url, token }) : null;
+import { redis, ID_RE, whoIs, readBody } from './_lib.js';
 
 const COLS = ['players', 'weeks', 'matches', 'picks', 'config'];
 const key = (c) => 'f7:' + c;
-const ID_RE = /^[A-Za-z0-9_\-.:@+~]{1,120}$/;
 
 const parse = (v) => (typeof v === 'string' ? JSON.parse(v) : v);
 function deepMerge(t, s) {
@@ -40,8 +35,11 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
       const pin = process.env.GROUP_PIN;
       if (pin && req.headers['x-pin'] !== pin) return res.status(401).json({ error: 'bad_pin' });
-      const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body || {};
-      const { op, col, id, data } = body;
+      const body = readBody(req);
+      const { op, col, id } = body;
+      let data = body.data;
+      const me = whoIs(req);
+
       if (op === 'photo' || op === 'unphoto') {
         if (!ID_RE.test(String(id || ''))) return res.status(400).json({ error: 'bad_path' });
         if (op === 'unphoto') { await redis.hdel('f7:photos', id); return res.json({ ok: true }); }
@@ -51,9 +49,26 @@ export default async function handler(req, res) {
         await redis.hset('f7:photos', { [id]: ph });
         return res.json({ ok: true });
       }
+
       if (!COLS.includes(col) || !ID_RE.test(String(id || ''))) return res.status(400).json({ error: 'bad_path' });
-      if (data !== undefined && (typeof data !== 'object' || Array.isArray(data) || JSON.stringify(data).length > 200000))
+      if (data !== undefined && (typeof data !== 'object' || data === null || Array.isArray(data) || JSON.stringify(data).length > 200000))
         return res.status(400).json({ error: 'bad_data' });
+
+      // fantasy teams: only the logged-in owner may create, change or delete their own pick
+      if (col === 'picks') {
+        const owner = id.slice(id.indexOf('_') + 1);
+        const ownerDoc = parse(await redis.hget(key('players'), owner));
+        const demoOk = ownerDoc && ownerDoc.demo; // sample-data managers have no PIN
+        if (!demoOk && owner !== me) return res.status(403).json({ error: 'not_you' });
+        if (data) data.manager = owner;
+      }
+      // votes: a merge may only touch the caller's own vote; a full rewrite of a match clears votes
+      if (col === 'matches') {
+        if (op === 'merge' && data && data.votes) {
+          if (!me || Object.keys(data.votes).some((k) => k !== me)) return res.status(403).json({ error: 'not_you' });
+        }
+        if (op === 'set' && data) data.votes = {};
+      }
 
       if (op === 'set') {
         await redis.hset(key(col), { [id]: JSON.stringify(data) });
@@ -63,6 +78,7 @@ export default async function handler(req, res) {
         await redis.hset(key(col), { [id]: JSON.stringify(deepMerge(parse(cur), data)) });
       } else if (op === 'del') {
         await redis.hdel(key(col), id);
+        if (col === 'players') { await redis.hdel('f7:pins', id); await redis.hdel('f7:photos', id); }
       } else {
         return res.status(400).json({ error: 'bad_op' });
       }
@@ -73,6 +89,6 @@ export default async function handler(req, res) {
     res.setHeader('Allow', 'GET, POST');
     return res.status(405).json({ error: 'method' });
   } catch (e) {
-    return res.status(500).json({ error: 'server', detail: String(e && e.message || e) });
+    return res.status(500).json({ error: 'server', detail: String((e && e.message) || e) });
   }
 }

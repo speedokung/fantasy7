@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#1C7547">
+<script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script>
+<script defer src="/_vercel/insights/script.js"></script>
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>Fantasy ก๊วน 7 คน</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -250,7 +252,7 @@ function lsSet(k,v){try{v==null?localStorage.removeItem(k):localStorage.setItem(
 function deepMerge(t,s){for(const k in s){if(s[k]&&typeof s[k]==='object'&&!Array.isArray(s[k])&&t[k]&&typeof t[k]==='object'&&!Array.isArray(t[k]))deepMerge(t[k],s[k]);else t[k]=s[k]}return t}
 
 /* ---------- state & store ---------- */
-const S={players:{},weeks:{},matches:{},picks:{},config:{...DEF_CFG},me:lsGet('f7_me'),tab:'home',weekId:null,teamWeekId:null,draft:{},loaded:false};
+const S={players:{},weeks:{},matches:{},picks:{},config:{...DEF_CFG},me:lsGet('f7_tok')?lsGet('f7_me'):null,tab:'home',weekId:null,teamWeekId:null,draft:{},loaded:false};
 let API=false,ver=0,srvVer=-1;const RAW={players:{},weeks:{},matches:{},picks:{},config:{}};
 function ingest(col,map){
   const out={};for(const [k,v] of Object.entries(map))out[k]={...v,id:k};
@@ -268,8 +270,9 @@ async function send(op,col,id,data){
   if(op==='set')data=strip(clone(data));
   applyLocal(op,col,id,data);
   if(!API)return;
-  const r=await fetch('/api/data',{method:'POST',headers:{'content-type':'application/json','x-pin':lsGet('f7_pin')||''},body:JSON.stringify({op,col,id,data})});
+  const r=await fetch('/api/data',{method:'POST',headers:{'content-type':'application/json','x-pin':lsGet('f7_pin')||'','x-me':S.me||'','x-tok':lsGet('f7_tok')||''},body:JSON.stringify({op,col,id,data})});
   if(r.status===401){lsSet('f7_pin',null);askPin();throw{code:'ต้องใส่รหัสก๊วน'}}
+  if(r.status===403){refresh(true);const who=S.me;forgetMe();if(who&&P(who))setTimeout(()=>becomeMe(who),50);throw{code:'ต้องยืนยันตัวตนด้วยรหัสก่อน'}}
   if(!r.ok){refresh(true);throw{code:(await r.json().catch(()=>({}))).error||r.status}}
 }
 const store={
@@ -543,7 +546,7 @@ function openProfile(pid){
   modal(`<div class="sec-h"><div class="nmrow" style="gap:14px">${avatar(pid,'l')}<div><div class="eyebrow">${p.pos==='DEF'?'ตัวรับ':'ตัวบุก'}${p.managerOnly?' · ผู้จัดการอย่างเดียว':''}</div><h3>${esc(p.name)}${p.nick&&p.nick!==p.name?` <span class="muted">"${esc(p.nick)}"</span>`:''}</h3></div></div><div style="text-align:right"><div class="big">${cur.price}</div><div class="small muted">ราคาตอนนี้</div></div></div>
    <div class="stats"><div class="stat"><b>${fmt(s.pts)}</b><span>แต้มรวม</span></div><div class="stat"><b>${cur.form==null?'–':fmt(cur.form)}</b><span>ฟอร์ม</span></div><div class="stat"><b>${s.wk||0}</b><span>สัปดาห์ที่มา</span></div><div class="stat"><b>${s.mp}</b><span>แมตช์</span></div><div class="stat"><b>${s.g}</b><span>ประตู</span></div><div class="stat"><b>${s.a}</b><span>แอสซิสต์</span></div><div class="stat"><b>${s.cs}</b><span>คลีนชีต</span></div><div class="stat"><b>${s.w}</b><span>ชนะ</span></div></div>
    ${hist.length?`<div class="tbl-wrap"><table><thead><tr><th>สัปดาห์</th><th class="r">แมตช์</th><th class="r">ยิง</th><th class="r">แอส</th><th class="r">เสีย</th><th class="r">แต้ม</th></tr></thead><tbody>${hist.map(w=>{const x=c.byWeek[w.id][pid];return `<tr><td>${esc(thDate(w.date))}</td><td class="r tn">${x.mp}</td><td class="r tn">${x.g}</td><td class="r tn">${x.a}</td><td class="r tn">${x.con}</td><td class="r num">${fmt(x.pts)}</td></tr>`}).join('')}</tbody></table></div>`:'<div class="small muted">ยังไม่มีประวัติการเตะ</div>'}
-   <div class="row wrapx"><button class="btn" data-act="editPlayer" data-pid="${pid}">แก้ข้อมูล</button>${S.me!==pid?`<button class="btn" data-act="setMe" data-pid="${pid}">นี่คือฉัน</button>`:''}<span class="grow"></span><button class="btn ghost" data-act="close">ปิด</button></div>`);
+   <div class="row wrapx"><button class="btn" data-act="editPlayer" data-pid="${pid}">แก้ข้อมูล</button>${S.me!==pid?`<button class="btn" data-act="setMe" data-pid="${pid}">นี่คือฉัน</button>`:''}${API?`<button class="btn sm ghost" data-act="resetPin" data-pid="${pid}">รีเซ็ตรหัส</button>`:''}<span class="grow"></span><button class="btn ghost" data-act="close">ปิด</button></div>`);
 }
 function shrink(file){return new Promise((ok,bad)=>{const url=URL.createObjectURL(file),img=new Image();
   img.onload=()=>{const S2=320,c=document.createElement('canvas');c.width=c.height=S2;const m=Math.min(img.width,img.height);
@@ -552,7 +555,7 @@ function shrink(file){return new Promise((ok,bad)=>{const url=URL.createObjectUR
 async function sendPhoto(id,dataUrl){
   if(dataUrl)PHOTO_MEM[id]=dataUrl;else delete PHOTO_MEM[id];
   if(!API)return;
-  const r=await fetch('/api/data',{method:'POST',headers:{'content-type':'application/json','x-pin':lsGet('f7_pin')||''},body:JSON.stringify({op:dataUrl?'photo':'unphoto',col:'players',id,photo:dataUrl})});
+  const r=await fetch('/api/data',{method:'POST',headers:{'content-type':'application/json','x-pin':lsGet('f7_pin')||'','x-me':S.me||'','x-tok':lsGet('f7_tok')||''},body:JSON.stringify({op:dataUrl?'photo':'unphoto',col:'players',id,photo:dataUrl})});
   if(r.status===401){lsSet('f7_pin',null);askPin();throw{code:'ต้องใส่รหัสก๊วน'}}
   if(!r.ok)throw{code:(await r.json().catch(()=>({}))).error||r.status};
 }
@@ -601,6 +604,7 @@ function vRules(){
     <li>ผู้เล่นยืมตัวไม่ได้แต้ม แต่ประตูที่ยิงยังนับในสกอร์ คนในก๊วนที่ยืนโกลแมตช์ไหน ไม่ได้แต้มแมตช์นั้น</li>
     <li>เลือก ${c.squad} คนต่อสัปดาห์ งบ ${c.budget} ห้ามเลือกตัวเอง เลือกจากทีมเดียวกันได้ไม่เกิน ${c.maxPerTeam} คน (นับตามทีมที่จัดในสัปดาห์นั้น) ${c.captain>1?`กัปตันได้แต้ม ×${fmt(c.captain)}`:''}</li>
     <li>ราคา = ${fmt(c.priceBase)} + ${fmt(c.priceSlope)}×ฟอร์ม (ปัดเศษ, ${c.priceMin}–${c.priceMax}) คนใหม่ราคา ${c.priceNew}</li>
+    <li>แต่ละคนมีรหัส 4–6 หลักของตัวเอง ทีม Fantasy และโหวตแก้ได้เฉพาะเจ้าของชื่อที่ใส่รหัสแล้ว</li>
     <li>ใครก็บันทึกผลได้ ถ้าไม่มีคนกดค้าน แต้มนับทันที ถ้ามีคนค้าน แมตช์นั้นไม่นับจนกว่าจะมีคนแก้ผล (แก้แล้วโหวตเริ่มใหม่)</li></ul></section>
   <section class="card"><div class="sec-h"><h2>ปรับค่าแต้ม</h2><button class="btn sm ghost" data-act="cfgReset">คืนค่าเริ่มต้น</button></div>
    <p class="small muted" style="margin:0">เปลี่ยนแล้วแต้มทุกสัปดาห์คำนวณใหม่ย้อนหลังทั้งหมด ตกลงกันในก๊วนก่อนแก้</p>
@@ -611,7 +615,34 @@ function vRules(){
 
 /* ---------- welcome: who are you ---------- */
 let gateShown=false,gateQ='';
-function setMe(id){S.me=id;lsSet('f7_me',id);closeModal();render();toast('สวัสดี '+nm(id))}
+function setMe(id,tok){S.me=id;lsSet('f7_me',id);if(tok)lsSet('f7_tok',tok);closeModal();render();toast('สวัสดี '+nm(id))}
+function forgetMe(){S.me=null;lsSet('f7_me',null);lsSet('f7_tok',null);render()}
+async function authCall(body){const r=await fetch('/api/auth',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});return {ok:r.ok,status:r.status,j:await r.json().catch(()=>({}))}}
+async function becomeMe(pid,fresh){
+  if(!API){setMe(pid);return}
+  let st;try{st=await authCall({op:'status',pid})}catch{toast('ต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่',true);return}
+  if(!st.ok){toast(st.status===404?'ยังไม่เจอชื่อนี้ในระบบ รอสักครู่แล้วลองใหม่':'ตรวจสอบชื่อไม่ได้',true);return}
+  const has=st.j.hasPin;let err='';
+  const draw=()=>{modal(`<div class="nmrow" style="gap:12px">${avatar(pid,'m')}<div><div class="eyebrow">${has?'ยืนยันตัวตน':'ตั้งรหัสของคุณ'}</div><h3>${esc(nm(pid))}</h3></div></div>
+    <p class="small muted" style="margin:0">${has?'ใส่รหัสที่ตั้งไว้ของชื่อนี้':fresh?'ตั้งรหัสตัวเลข 4–6 หลัก ไว้ใช้ยืนยันว่าเป็นคุณ คนอื่นจะแก้ทีม Fantasy หรือโหวตแทนคุณไม่ได้':'ชื่อนี้ยังไม่มีรหัส ถ้าเป็นคุณจริง ตั้งรหัสตัวเลข 4–6 หลักเลย ครั้งหน้าใช้รหัสนี้เข้าจากเครื่องอื่น'}</p>
+    <div class="field"><label for="pinMe">${has?'รหัส':'รหัสใหม่'}</label><input type="password" id="pinMe" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="${has?'current-password':'new-password'}" style="font-size:22px;letter-spacing:.3em;max-width:180px"></div>
+    ${err?`<div class="why" style="grid-column:auto">${esc(err)}</div>`:''}
+    <div class="row wrapx"><button class="btn pri" data-act="pinGo">${has?'ยืนยัน':'ตั้งรหัสและเข้าใช้'}</button><button class="btn ghost" data-act="close">ยกเลิก</button>${has?'<span class="grow"></span><span class="small muted">ลืมรหัส? ให้คนดูแลลีกรีเซ็ตให้</span>':''}</div>`,{
+    pinGo:async()=>{const pin=$('#pinMe').value.trim();if(!/^\d{4,6}$/.test(pin)){err='รหัสต้องเป็นตัวเลข 4–6 หลัก';draw();return}
+      const r=await authCall({op:has?'login':'claim',pid,pin}).catch(()=>null);
+      if(!r){err='ต่อเซิร์ฟเวอร์ไม่ได้ ลองใหม่';draw();return}
+      if(r.ok){setMe(pid,r.j.token);return}
+      err=r.j.error==='wrong_pin'?`รหัสไม่ถูก (ลองได้อีก ${r.j.left} ครั้ง)`:r.j.error==='too_many'?'ใส่ผิดหลายครั้ง รอ 15 นาทีแล้วลองใหม่':r.j.error==='has_pin'?'มีคนตั้งรหัสชื่อนี้ไปแล้ว':'ทำรายการไม่สำเร็จ ('+(r.j.error||r.status)+')';
+      if(r.j.error==='has_pin'){becomeMe(pid);return}draw()}});
+    const i=$('#pinMe');if(i){i.focus();i.onkeydown=e=>{if(e.key==='Enter')MH.pinGo()}}};
+  draw();
+}
+function openResetPin(pid){let err='';const draw=()=>{modal(`<h3>รีเซ็ตรหัสของ ${esc(nm(pid))}</h3><p class="small muted" style="margin:0">ต้องใช้รหัสผู้ดูแล (ADMIN_PIN ที่ตั้งใน Vercel) หลังรีเซ็ต เจ้าของชื่อตั้งรหัสใหม่ได้ตอนเลือกชื่อครั้งถัดไป</p>
+  <div class="field"><label for="admPin">รหัสผู้ดูแล</label><input type="password" id="admPin" autocomplete="off"></div>${err?`<div class="why" style="grid-column:auto">${esc(err)}</div>`:''}
+  <div class="row"><button class="btn danger" data-act="admGo">รีเซ็ตรหัส</button><button class="btn ghost" data-act="close">ยกเลิก</button></div>`,{
+  admGo:async()=>{const r=await authCall({op:'reset',pid,admin:$('#admPin').value.trim()}).catch(()=>null);
+    if(r&&r.ok){closeModal();if(S.me===pid)forgetMe();toast('รีเซ็ตรหัสแล้ว');return}
+    err=!r?'ต่อเซิร์ฟเวอร์ไม่ได้':r.j.error==='no_admin_pin'?'ยังไม่ได้ตั้ง ADMIN_PIN ใน Vercel':'รหัสผู้ดูแลไม่ถูก';draw()}})};draw()}
 function openGate(){
   gateShown=true;
   const all=Object.values(S.players).sort((a,b)=>nm(a.id).localeCompare(nm(b.id),'th'));
@@ -621,8 +652,8 @@ function openGate(){
     ${all.length>8?`<input type="text" id="gateQ" placeholder="ค้นหาชื่อ" value="${esc(gateQ)}" autocomplete="off">`:''}
     <div class="list" style="max-height:48vh;overflow:auto">${list.map(p=>`<button class="pk" data-act="gatePick" data-pid="${p.id}" style="grid-template-columns:auto 1fr auto"><span>${avatar(p.id,'m')}</span><span><b>${esc(nm(p.id))}</b>${p.nick&&p.name!==p.nick?` <span class="small muted">${esc(p.name)}</span>`:''}<br>${p.managerOnly?'<span class="small muted">ผู้จัดการ</span>':posTag(p)}</span><span class="small muted">นี่คือฉัน</span></button>`).join('')||`<div class="small muted">${all.length?'ไม่เจอชื่อนี้':'ยังไม่มีใครลงชื่อ'}</div>`}</div>
     <div class="row wrapx"><button class="btn pri" data-act="gateNew">ยังไม่มีชื่อ เพิ่มตัวเอง</button><span class="grow"></span><button class="btn ghost sm" data-act="close">ดูอย่างเดียวก่อน</button></div>`,{
-      gatePick:el=>setMe(el.dataset.pid),
-      gateNew:()=>openPlayerForm(null,id=>setMe(id))});
+      gatePick:el=>becomeMe(el.dataset.pid),
+      gateNew:()=>openPlayerForm(null,id=>becomeMe(id,true))});
     const qi=$('#gateQ');if(qi){qi.oninput=()=>{gateQ=qi.value;const pos=qi.selectionStart;draw();const n=$('#gateQ');n.focus();n.setSelectionRange(pos,pos)}}};
   draw();
 }
@@ -725,7 +756,8 @@ const ACT={
   profile:el=>openProfile(el.dataset.pid),
   newPlayer:()=>openPlayerForm(null),
   editPlayer:el=>openPlayerForm(el.dataset.pid),
-  setMe:el=>{S.me=el.dataset.pid;lsSet('f7_me',S.me);closeModal();render();toast('ตั้งเป็น '+nm(S.me)+' แล้ว')},
+  setMe:el=>becomeMe(el.dataset.pid),
+  resetPin:el=>openResetPin(el.dataset.pid),
   newWeek:()=>{modal(`<h3>สร้างสัปดาห์ใหม่</h3><div class="field"><label for="nwDate">วันเตะ</label><input type="date" id="nwDate" value="${todayISO()}"></div>
      <div class="row"><button class="btn pri" data-act="nwSave">สร้าง</button><button class="btn ghost" data-act="close">ยกเลิก</button></div>`,{
      nwSave:async()=>{const d=$('#nwDate').value;if(!/^\d{4}-\d{2}-\d{2}$/.test(d)){toast('เลือกวันที่ก่อน',true);return}closeModal();
@@ -784,8 +816,8 @@ document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if
   if(a==='scrim'){if(e.target===el)closeModal();return}
   const h=MH[a]||ACT[a];if(h){e.preventDefault();h(el,e)}});
 document.addEventListener('change',async e=>{const el=e.target.closest('[data-change]');if(!el)return;const k=el.dataset.change;
-  if(k==='me'&&el.value==='__new'){el.value=S.me||'';openPlayerForm(null,id=>setMe(id));return}
-  if(k==='me'){S.me=el.value||null;lsSet('f7_me',S.me);render();return}
+  if(k==='me'&&el.value==='__new'){el.value=S.me||'';openPlayerForm(null,id=>becomeMe(id,true));return}
+  if(k==='me'){const v=el.value;el.value=S.me||'';if(!v){forgetMe();return}becomeMe(v);return}
   if(k==='gk'&&R){R.gk[el.dataset.s]=el.value;return}
   if(k==='weekSel'){S.weekId=el.value;render();return}
   if(k==='teamWeekSel'){S.teamWeekId=el.value;render();return}
