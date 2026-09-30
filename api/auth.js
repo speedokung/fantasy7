@@ -1,4 +1,4 @@
-import { redis, ID_RE, tokenFor, pinHash, readBody } from './_lib.js';
+import { redis, ID_RE, tokenFor, pinHash, readBody, adminCheck } from './_lib.js';
 
 const PIN_RE = /^\d{4,6}$/;
 const MAX_TRIES = 8; // wrong PINs allowed per 15 minutes, per player
@@ -8,6 +8,10 @@ export default async function handler(req, res) {
   if (!redis) return res.status(500).json({ error: 'no_db' });
   if (req.method !== 'POST') return res.status(405).json({ error: 'method' });
   const { op, pid, pin, admin } = readBody(req);
+  if (op === 'admin') {
+    const e = adminCheck(admin);
+    return e ? res.status(e === 'no_admin_pin' ? 403 : 401).json({ error: e }) : res.json({ ok: true });
+  }
   if (!ID_RE.test(String(pid || ''))) return res.status(400).json({ error: 'bad_pid' });
 
   const exists = await redis.hexists('f7:players', pid);
@@ -37,9 +41,9 @@ export default async function handler(req, res) {
   }
 
   if (op === 'reset') {
-    const want = process.env.ADMIN_PIN || process.env.GROUP_PIN;
-    if (!want) return res.status(403).json({ error: 'no_admin_pin' });
-    if (String(admin || '') !== want) return res.status(401).json({ error: 'wrong_admin' });
+    const e = adminCheck(admin);
+    if (e === 'no_admin_pin') return res.status(403).json({ error: e });
+    if (e) return res.status(401).json({ error: 'wrong_admin' });
     await redis.hdel('f7:pins', pid);
     await redis.del('f7:tries:' + pid);
     return res.json({ ok: true });

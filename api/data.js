@@ -1,4 +1,4 @@
-import { redis, ID_RE, whoIs, readBody } from './_lib.js';
+import { redis, ID_RE, whoIs, readBody, adminCheck } from './_lib.js';
 
 const COLS = ['players', 'weeks', 'matches', 'picks', 'config'];
 const key = (c) => 'f7:' + c;
@@ -61,6 +61,25 @@ export default async function handler(req, res) {
         const demoOk = ownerDoc && ownerDoc.demo; // sample-data managers have no PIN
         if (!demoOk && owner !== me) return res.status(403).json({ error: 'not_you' });
         if (data) data.manager = owner;
+        // no changes once the GW is locked (by the admin, or by its first recorded match)
+        if (!demoOk) {
+          const weekId = id.slice(0, id.indexOf('_'));
+          const wk = parse(await redis.hget(key('weeks'), weekId));
+          let locked = !!(wk && wk.locked);
+          if (!locked) {
+            const all = (await redis.hgetall(key('matches'))) || {};
+            locked = Object.values(all).some((v) => { const m = parse(v); return m && m.weekId === weekId && m.played; });
+          }
+          if (locked) return res.status(403).json({ error: 'locked' });
+        }
+      }
+      // locking / unlocking fantasy picks for a GW needs the admin PIN
+      if (col === 'weeks' && data && 'locked' in data) {
+        const cur = parse(await redis.hget(key('weeks'), id));
+        if (!!data.locked !== !!(cur && cur.locked)) {
+          const e = adminCheck(req.headers['x-admin']);
+          if (e) return res.status(403).json({ error: e });
+        }
       }
       // votes: a merge may only touch the caller's own vote; a full rewrite of a match clears votes
       if (col === 'matches') {

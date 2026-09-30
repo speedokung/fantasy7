@@ -23,3 +23,10 @@ export function whoIs(req) {
 export function readBody(req) {
   return typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {};
 }
+
+export const adminPin = () => process.env.ADMIN_PIN || process.env.GROUP_PIN || '';
+export function adminCheck(given) {
+  const want = adminPin();
+  if (!want) return 'no_admin_pin';
+  return String(given || '') === want ? null : 'need_admin';
+}
