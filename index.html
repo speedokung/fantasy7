@@ -429,20 +429,27 @@ function standings(wids){
   const rows={},set=new Set(wids);
   const keyOf=t=>(t?.name||'').trim().toLowerCase();
   const row=(w,i)=>{const t=w.teams?.[i];const k=keyOf(t)||('#'+i);const r=rows[k]||(rows[k]={name:t?.name||('ทีม '+(i+1)),color:bibOf(w,i).c,date:'',p:0,w:0,d:0,l:0,gf:0,ga:0});if(w.date>=r.date){r.date=w.date;r.name=t?.name||r.name;r.color=bibOf(w,i).c}return r};
+  if(wids.length===1){const w=S.weeks[wids[0]];(w?.teams||[]).forEach((_,i)=>row(w,i))}
   for(const m of Object.values(S.matches)){if(!counts(m)||!set.has(m.weekId))continue;const w=S.weeks[m.weekId];if(!w)continue;
     const [a,b]=score(m);for(const [i,gf,ga] of [[m.a,a,b],[m.b,b,a]]){const r=row(w,i);r.p++;r.gf+=gf;r.ga+=ga;if(gf>ga)r.w++;else if(gf===ga)r.d++;else r.l++}}
   return Object.values(rows).map(r=>({...r,gd:r.gf-r.ga,pts:r.w*3+r.d})).sort((x,y)=>y.pts-x.pts||y.gd-x.gd||y.gf-x.gf||x.name.localeCompare(y.name,'th'));
 }
 function standingsCard(){
-  const played=weeksDesc().filter(w=>matchesOf(w.id).some(counts));
-  if(!played.length)return '';
-  if(S.standWeek!=='season'&&!played.some(w=>w.id===S.standWeek))S.standWeek=played[0].id;
+  const all=weeksDesc();
+  if(!all.length)return '';
+  const played=all.filter(w=>matchesOf(w.id).some(counts));
+  if(!S.standWeek||(S.standWeek!=='season'&&!S.weeks[S.standWeek]))S.standWeek=(played[0]||all[0]).id;
   const wids=S.standWeek==='season'?played.map(w=>w.id):[S.standWeek];
   const rows=standings(wids);
+  const idx=all.findIndex(w=>w.id===S.standWeek);
+  const nav=S.standWeek==='season'?'':`<button class="btn sm" data-act="standStep" data-d="1" ${idx>=all.length-1?'disabled':''} aria-label="GW ก่อนหน้า">←</button>`;
+  const navR=S.standWeek==='season'?'':`<button class="btn sm" data-act="standStep" data-d="-1" ${idx<=0?'disabled':''} aria-label="GW ถัดไป">→</button>`;
+  const cur=S.weeks[S.standWeek];
+  const note=S.standWeek!=='season'&&cur&&!matchesOf(cur.id).some(counts)?`<div class="small muted">GW นี้ยังไม่มีผลที่นับแต้ม</div>`:'';
   return `<section class="card"><div class="sec-h"><h2>ตารางคะแนนทีม</h2>
-    <select data-change="standWeek" aria-label="เลือกช่วง"><option value="season" ${S.standWeek==='season'?'selected':''}>ทั้งซีซั่น</option>${played.map(w=>`<option value="${w.id}" ${w.id===S.standWeek?'selected':''}>${esc(gwLabel(w))}</option>`).join('')}</select></div>
-   <div class="tbl-wrap"><table><thead><tr><th>#</th><th>ทีม</th><th class="r" title="แข่ง">P</th><th class="r" title="ชนะ">W</th><th class="r" title="เสมอ">D</th><th class="r" title="แพ้">L</th><th class="r" title="ยิงได้">GF</th><th class="r" title="เสีย">GA</th><th class="r" title="ผลต่างประตู">GD</th><th class="r">แต้ม</th></tr></thead><tbody>
-   ${rows.map((r,i)=>`<tr><td class="tn muted">${i+1}</td><td><span class="row" style="gap:6px"><span class="bib" style="background:${r.color}"></span>${esc(r.name)}</span></td><td class="r tn">${r.p}</td><td class="r tn">${r.w}</td><td class="r tn">${r.d}</td><td class="r tn">${r.l}</td><td class="r tn">${r.gf}</td><td class="r tn">${r.ga}</td><td class="r tn">${r.gd>0?'+':''}${r.gd}</td><td class="r num">${r.pts}</td></tr>`).join('')}</tbody></table></div>
+    <div class="row">${nav}<select data-change="standWeek" aria-label="เลือกช่วง"><option value="season" ${S.standWeek==='season'?'selected':''}>ทั้งซีซั่น</option>${all.map(w=>`<option value="${w.id}" ${w.id===S.standWeek?'selected':''}>${esc(gwLabel(w))}</option>`).join('')}</select>${navR}</div></div>
+   ${note}${rows.length?`<div class="tbl-wrap"><table><thead><tr><th>#</th><th>ทีม</th><th class="r" title="แข่ง">P</th><th class="r" title="ชนะ">W</th><th class="r" title="เสมอ">D</th><th class="r" title="แพ้">L</th><th class="r" title="ยิงได้">GF</th><th class="r" title="เสีย">GA</th><th class="r" title="ผลต่างประตู">GD</th><th class="r">แต้ม</th></tr></thead><tbody>
+   ${rows.map((r,i)=>`<tr><td class="tn muted">${i+1}</td><td><span class="row" style="gap:6px"><span class="bib" style="background:${r.color}"></span>${esc(r.name)}</span></td><td class="r tn">${r.p}</td><td class="r tn">${r.w}</td><td class="r tn">${r.d}</td><td class="r tn">${r.l}</td><td class="r tn">${r.gf}</td><td class="r tn">${r.ga}</td><td class="r tn">${r.gd>0?'+':''}${r.gd}</td><td class="r num">${r.pts}</td></tr>`).join('')}</tbody></table></div>`:`<div class="empty small">${S.standWeek==='season'?'ยังไม่มีผลแมตช์ที่นับแต้ม':'GW นี้ยังไม่ได้จัดทีม'}</div>`}
    <p class="small muted" style="margin:0">ชนะ 3 เสมอ 1 แพ้ 0 · เรียงตามแต้ม แล้ว GD แล้วประตูได้${S.standWeek==='season'?' · ทั้งซีซั่นรวมทีมที่ใช้ชื่อเดียวกัน':''}</p></section>`;
 }
 function onboarding(){
@@ -799,6 +806,7 @@ function roundRobin(n){const t=[...Array(n).keys()];if(n%2)t.push(-1);const m=t.
 /* ---------- actions ---------- */
 function needMe(){if(S.me)return true;toast('เลือกชื่อตัวเองที่มุมขวาบนก่อน',true);$('#meSel').focus();return false}
 const ACT={
+  standStep:el=>{const all=weeksDesc(),i=all.findIndex(w=>w.id===S.standWeek)+(+el.dataset.d);if(all[i]){S.standWeek=all[i].id;render()}},
   tab:el=>{S.tab=el.dataset.k;render();window.scrollTo(0,0)},
   goTeam:el=>{S.teamWeekId=el.dataset.w;S.tab='team';render();window.scrollTo(0,0)},
   scrim:(el,e)=>{if(e.target===el)closeModal()},
