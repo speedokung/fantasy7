@@ -68,9 +68,18 @@ export default async function handler(req, res) {
           let locked = !!(wk && wk.locked);
           if (!locked) {
             const all = (await redis.hgetall(key('matches'))) || {};
-            locked = Object.values(all).some((v) => { const m = parse(v); return m && m.weekId === weekId && m.played; });
+            locked = Object.values(all).some((v) => { const m = parse(v); return m && m.weekId === weekId && (m.played || m.live); });
           }
           if (locked) return res.status(403).json({ error: 'locked' });
+        }
+      }
+      // check-in (who came this GW) is admin-only once the GW exists
+      if (col === 'weeks' && data && 'attendees' in data) {
+        const cur = parse(await redis.hget(key('weeks'), id));
+        const norm = (x) => JSON.stringify([...(x || [])].sort());
+        if (cur && norm(cur.attendees) !== norm(data.attendees)) {
+          const e = adminCheck(req.headers['x-admin']);
+          if (e) return res.status(403).json({ error: e });
         }
       }
       // locking / unlocking fantasy picks for a GW needs the admin PIN
