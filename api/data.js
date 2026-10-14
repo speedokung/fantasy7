@@ -73,6 +73,22 @@ export default async function handler(req, res) {
           if (locked) return res.status(403).json({ error: 'locked' });
         }
       }
+      // a closed GW is frozen: its matches and week record can't change (an admin can reopen it)
+      if (col === 'weeks' && data && ('closed' in data || 'cfg' in data)) {
+        const e = adminCheck(req.headers['x-admin']);
+        if (e) return res.status(403).json({ error: e });
+      } else if (col === 'weeks') {
+        const cur = parse(await redis.hget(key('weeks'), id));
+        if (cur && cur.closed) return res.status(403).json({ error: 'closed' });
+      }
+      if (col === 'matches') {
+        const cur = parse(await redis.hget(key('matches'), id));
+        const wid = (cur && cur.weekId) || (data && data.weekId);
+        if (wid) {
+          const wk = parse(await redis.hget(key('weeks'), wid));
+          if (wk && wk.closed) return res.status(403).json({ error: 'closed' });
+        }
+      }
       // check-in (who came this GW) is admin-only once the GW exists
       if (col === 'weeks' && data && 'attendees' in data) {
         const cur = parse(await redis.hget(key('weeks'), id));

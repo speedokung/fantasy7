@@ -313,6 +313,7 @@ async function send(op,col,id,data){
     if(j.error==='need_admin'){lsSet('f7_admin',null);refresh(true);throw{code:'ต้องใช้รหัสผู้ดูแล'}}
     if(j.error==='no_admin_pin'){refresh(true);throw{code:'ยังไม่ได้ตั้ง ADMIN_PIN ใน Vercel'}}
     if(j.error==='locked'){refresh(true);throw{code:'GW นี้ล็อกทีมแล้ว'}}
+    if(j.error==='closed'){refresh(true);throw{code:'GW นี้ปิดแล้ว แก้ไม่ได้'}}
     refresh(true);const who=S.me;forgetMe();if(who&&P(who))setTimeout(()=>becomeMe(who),50);throw{code:'ต้องยืนยันตัวตนด้วยรหัสก่อน'}}
   if(!r.ok){refresh(true);throw{code:(await r.json().catch(()=>({}))).error||r.status}}
 }
@@ -348,13 +349,15 @@ function addStat(t,s){for(const k in s)t[k]=(t[k]||0)+s[k]}
 const isDisputed=m=>Object.values(m.votes||{}).some(x=>x&&x.v===-1);
 const counts=m=>(m.played||m.live)&&!isDisputed(m);
 function score(m){let a=0,b=0;for(const e of m.events||[]){if(e.side==='a')a++;else b++}return [a,b]}
+const wcfg=w=>w?.closed&&w.cfg?{...S.config,...w.cfg}:S.config;
+const rosterNow=(w,m)=>({a:[...(w.teams?.[m.a]?.players||[])],b:[...(w.teams?.[m.b]?.players||[])]});
 const posAt=(w,pid)=>w?.pos?.[pid]||S.players[pid]?.pos;
 function matchPoints(m,w,cfg){
   const res={};const [sa,sb]=score(m);
   for(const [ti,gf,ga] of [[m.a,sa,sb],[m.b,sb,sa]]){
-    const team=w.teams?.[ti];if(!team)continue;
-    const gk=m.gk?.[ti===m.a?'a':'b'];
-    for(const pid of team.players||[]){const p=S.players[pid];if(!p||pid===gk)continue;
+    const sd=ti===m.a?'a':'b';const list=m.roster?.[sd]||w.teams?.[ti]?.players;if(!list)continue;
+    const gk=m.gk?.[sd];
+    for(const pid of list){const p=S.players[pid];if(!p||pid===gk)continue;
       const st=res[pid]=blank();st.mp=1;st.con=ga;
       if(gf>ga){st.w=1;st.pts+=cfg.win}
       if(ga===0)st.cs=1;
@@ -376,7 +379,7 @@ function calc(){
   for(const m of Object.values(S.matches)){
     if(!counts(m))continue;const w=S.weeks[m.weekId];if(!w)continue;
     const bw=byWeek[m.weekId]||(byWeek[m.weekId]={});
-    for(const [pid,st] of Object.entries(matchPoints(m,w,cfg))){addStat(bw[pid]||(bw[pid]=blank()),st)}
+    for(const [pid,st] of Object.entries(matchPoints(m,w,wcfg(w)))){addStat(bw[pid]||(bw[pid]=blank()),st)}
   }
   const weeksAsc=Object.values(S.weeks).sort((a,b)=>a.date<b.date?-1:1);
   for(const w of weeksAsc)for(const [pid,st] of Object.entries(byWeek[w.id]||{})){const s=season[pid]||(season[pid]={...blank(),wk:0});addStat(s,st);s.wk++}
@@ -395,7 +398,7 @@ const NOW='9999-12-31';
 function prevWeekDate(){const w=calc().weeksAsc.filter(w=>Object.values(S.matches).some(m=>m.weekId===w.id&&counts(m)));return w.length?w[w.length-1].date:null}
 function teamIdxOf(w,pid){return (w.teams||[]).findIndex(t=>(t.players||[]).includes(pid))}
 function teamOverflow(w,ids){const c={};for(const id of ids){const t=teamIdxOf(w,id);if(t>=0)c[t]=(c[t]||0)+1}const lim=S.config.maxPerTeam||99;return Object.entries(c).filter(([,n])=>n>lim).map(([t])=>+t)}
-function pickPts(pk){const bw=calc().byWeek[pk.weekId]||{};let t=0;for(const p of pk.players||[])t+=(bw[p]?.pts||0)*(p===pk.captain?S.config.captain:1);return t}
+function pickPts(pk){const bw=calc().byWeek[pk.weekId]||{};let t=0;for(const p of pk.players||[])t+=(bw[p]?.pts||0)*(p===pk.captain?wcfg(S.weeks[pk.weekId]).captain:1);return t}
 
 /* ---------- data accessors ---------- */
 const P=id=>S.players[id];
@@ -517,7 +520,9 @@ function heroCard(w,ms){
      <button class="btn pri bigbtn" data-act="liveStart" data-m="${nx.id}">เริ่มแมตช์ · บันทึกสด</button>
      <div class="row"><span class="small muted grow">กดเริ่มแล้วกด + ประตูระหว่างเตะ ทุกคนเห็นสกอร์สด</span><button class="btn sm ghost" data-act="record" data-m="${nx.id}">กรอกผลทีเดียว</button></div></section>`;
   if(total)return `<section class="card hero"><div class="sec-h"><h2>เตะครบ ${total} แมตช์แล้ว</h2><button class="btn sm" data-act="tab" data-k="home">ดูตารางคะแนน</button></div>
-     <button class="btn pri bigbtn" data-act="gwSummary" data-w="${w.id}">สรุป GW · สร้างรูปแชร์ลง LINE</button></section>`;
+     <button class="btn pri bigbtn" data-act="gwSummary" data-w="${w.id}">สรุป GW · สร้างรูปแชร์ลง LINE</button>
+     ${w.closed?`<div class="row wrapx"><span class="pill ok">ปิด GW แล้ว · แต้มล็อกถาวร</span><span class="grow"></span><button class="btn sm ghost" data-act="closeGw" data-w="${w.id}" data-v="0">เปิด GW อีกครั้ง (แอดมิน)</button></div>`
+       :`<button class="btn bigbtn" data-act="closeGw" data-w="${w.id}" data-v="1">ปิด GW · ล็อกแต้มถาวร (แอดมิน)</button><p class="small muted" style="margin:0">ปิดแล้ว ผลแมตช์ รายชื่อทีม โหวต และค่าแต้มของ GW นี้จะไม่เปลี่ยนอีก</p>`}</section>`;
   return '';
 }
 function vWeek(){
@@ -572,6 +577,8 @@ function fixture(w,m,no){
   const votes=Object.entries(m.votes||{}).filter(([,x])=>x&&x.v);
   const up=votes.filter(([,x])=>x.v===1).length,dn=votes.filter(([,x])=>x.v===-1);
   const my=S.me&&m.votes?.[S.me]?.v;
+  if(w.closed){const [a2,b2]=score(m);const evs2=(m.events||[]).map(e=>e.type==='og'?`${esc(nm(e.scorer))} (เข้าตัวเอง)`:`${esc(nm(e.scorer))}${e.assist?' ← '+esc(nm(e.assist)):''}`);
+    return `<div class="fx">${no?`<div class="no">แมตช์ที่ ${no}</div>`:''}<div class="tA">${esc(teamName(w,m.a))}${bibEl(w,m.a)}</div><div class="sc">${m.played?`${a2} – ${b2}`:'–'}</div><div class="tB">${bibEl(w,m.b)}${esc(teamName(w,m.b))}</div>${evs2.length?`<div class="fx-ev">${evs2.join(' · ')}</div>`:''}</div>`}
   const pill=m.live?'<span class="livepill">LIVE</span>':!m.played?'<span class="pill wait">ยังไม่เตะ</span>':disp?'<span class="pill bad">มีคนค้าน · ยังไม่นับแต้ม</span>':'<span class="pill ok">นับแต้มแล้ว</span>';
   const gkTxt=m.played&&m.gk?['a','b'].map(sd=>m.gk[sd]&&m.gk[sd]!=='loan'?`โกล${esc(teamName(w,sd==='a'?m.a:m.b))}: ${esc(nm(m.gk[sd]))} (ไม่นับแต้ม)`:'').filter(Boolean):[];
   const evs=(m.events||[]).map(e=>e.type==='og'?`${esc(nm(e.scorer))} (เข้าตัวเอง)`:`${esc(nm(e.scorer))}${e.assist?' ← '+esc(nm(e.assist)):''}`);
@@ -617,7 +624,7 @@ function vTeam(){
    <div class="list" style="gap:2px">${pool.map(({p,price,form})=>`<button class="pk" data-act="pick" data-pid="${p.id}" aria-pressed="${d.players.includes(p.id)}" style="grid-template-columns:auto 1fr auto"><span>${avatar(p.id,'m')}</span><span>${posTag(p)} <b>${esc(nm(p.id))}</b>${teamIdxOf(w,p.id)>=0?` <span class="small muted" style="white-space:nowrap">${bibEl(w,teamIdxOf(w,p.id))} ${esc(teamName(w,teamIdxOf(w,p.id)))}</span>`:''}<br><span class="small muted">${form==null?'ยังไม่มีฟอร์ม':'ฟอร์ม '+fmt(form)+' แต้ม/สัปดาห์'}</span></span><span class="price">${price}</span></button>`).join('')||'<div class="empty small">ไม่มีนักเตะให้เลือก</div>'}</div></section>`;
 }
 function lockedView(w){
-  const ms=matchesOf(w.id),bw=calc().byWeek[w.id]||{},cap=S.config.captain;
+  const ms=matchesOf(w.id),bw=calc().byWeek[w.id]||{},cap=wcfg(w).captain;
   const live=weekLive(w),done=ms.length&&ms.every(m=>m.played);
   const pk=Object.values(S.picks).filter(x=>x.weekId===w.id).map(x=>({...x,pts:pickPts(x)})).sort((a,b)=>b.pts-a.pts);
   const pp=(x,p)=>(bw[p]?.pts||0)*(p===x.captain?cap:1);
@@ -713,6 +720,7 @@ function vRules(){
     <li>ผู้เล่นยืมตัวไม่ได้แต้ม แต่ประตูที่ยิงยังนับในสกอร์ คนในก๊วนที่ยืนโกลแมตช์ไหน ไม่ได้แต้มแมตช์นั้น</li>
     <li>เลือก ${c.squad} คนต่อสัปดาห์ งบ ${c.budget} ห้ามเลือกตัวเอง เลือกจากทีมเดียวกันได้ไม่เกิน ${c.maxPerTeam} คน (นับตามทีมที่จัดในสัปดาห์นั้น) ${c.captain>1?`กัปตันได้แต้ม ×${fmt(c.captain)}`:''}</li>
     <li>ราคา = ${fmt(c.priceBase)} + ${fmt(c.priceSlope)}×ฟอร์ม (ปัดเศษ, ${c.priceMin}–${c.priceMax}) คนใหม่ราคา ${c.priceNew}</li>
+    <li>แอดมินกด "ปิด GW" หลังเตะครบ แล้วแต้ม GW นั้นจะล็อกถาวร ไม่เปลี่ยนตามการโหวต การย้ายคน หรือการปรับค่าแต้มทีหลัง</li>
     <li>ตำแหน่งบุก/รับถูกบันทึกไว้ตอนบันทึกผลแมตช์แรกของ GW เปลี่ยนตำแหน่งทีหลังมีผลกับ GW ถัดไปเท่านั้น</li>
     <li>ล็อก/ปลดล็อกการเลือกทีม Fantasy ต้องใช้รหัสผู้ดูแล (ระบบล็อกเองเมื่อบันทึกผลแมตช์แรก)</li>
     <li>แต่ละคนมีรหัส 4–6 หลักของตัวเอง ทีม Fantasy และโหวตแก้ได้เฉพาะเจ้าของชื่อที่ใส่รหัสแล้ว</li>
@@ -929,7 +937,7 @@ function renderRecord(){
     rcAssist:el=>{R.events.push({type:'goal',side:R.step.side,scorer:R.step.scorer,assist:el.dataset.pid||null});R.step=null;renderRecord()},
     rcRm:el=>{R.events.splice(+el.dataset.i,1);renderRecord()},
     rcDel:async()=>{if(!R.delArm){R.delArm=true;renderRecord();return}const id=R.mid;closeModal();await save(()=>store.del('matches',id),'ลบแมตช์แล้ว')},
-    rcSave:async()=>{const m2=S.matches[R.mid];const doc={...strip(clone(m2)),events:R.events,gk:R.gk,played:true,live:false,by:S.me||null,at:Date.now(),votes:{}};const id=R.mid,wid=m2.weekId;closeModal();await save(async()=>{await store.set('matches',id,doc);await freezePos(wid)},'บันทึกผลแล้ว')}
+    rcSave:async()=>{const m2=S.matches[R.mid];const doc={...strip(clone(m2)),roster:m2.roster||rosterNow(S.weeks[m2.weekId],m2),events:R.events,gk:R.gk,played:true,live:false,by:S.me||null,at:Date.now(),votes:{}};const id=R.mid,wid=m2.weekId;closeModal();await save(async()=>{await store.set('matches',id,doc);await freezePos(wid)},'บันทึกผลแล้ว')}
   });
 }
 
@@ -957,7 +965,8 @@ function missingPos(w){const out={};for(const t of w.teams||[])for(const pid of 
 async function freezePos(wid){const w=S.weeks[wid];if(!w)return;const add=missingPos(w);if(Object.keys(add).length)await store.merge('weeks',wid,{pos:add})}
 const posTried=new Set();
 function backfillPos(){if(!API)return;for(const w of Object.values(S.weeks)){if(posTried.has(w.id))continue;
-  if(!matchesOf(w.id).some(m=>m.played))continue;posTried.add(w.id);if(Object.keys(missingPos(w)).length)freezePos(w.id).catch(()=>{})}}
+  if(!matchesOf(w.id).some(m=>m.played))continue;posTried.add(w.id);if(w.closed)continue;if(Object.keys(missingPos(w)).length)freezePos(w.id).catch(()=>{});
+  for(const m of matchesOf(w.id))if(m.played&&!m.roster)store.merge('matches',m.id,{roster:rosterNow(w,m)}).catch(()=>{})}}
 
 /* ---------- team generation ---------- */
 // order matches so every team rests about equally: nobody sits more than ceil((teams-1)/2) games in a row
@@ -1020,8 +1029,11 @@ function buildTeams(ids,n,date,posMap){
   const sortF=arr=>arr.sort((x,y)=>form(y)-form(x));
   const att=sortF(ids.filter(i=>pos(i)==='ATT')),def=sortF(ids.filter(i=>pos(i)==='DEF'));
   const teams=[...Array(n)].map((_,i)=>({name:'ทีม'+BIBS[i].n,bib:i,players:[],loans:[]}));
-  att.forEach((id,k)=>{const r=Math.floor(k/n),c=k%n;teams[r%2?n-1-c:c].players.push(id)});
-  def.forEach((id,k)=>{const r=Math.floor(k/n),c=k%n;teams[r%2?c:n-1-c].players.push(id)});
+  // strongest first; each player joins the team with the fewest players, then fewest of that position, then lowest strength
+  const str=Array(n).fill(0),cnt={ATT:Array(n).fill(0),DEF:Array(n).fill(0)};
+  const place=(arr,ps)=>{for(const id of arr){let b=0;for(let t=1;t<n;t++){const d=teams[t].players.length-teams[b].players.length||cnt[ps][t]-cnt[ps][b]||str[t]-str[b];if(d<0)b=t}
+    teams[b].players.push(id);cnt[ps][b]++;str[b]+=Math.max(0,form(id))}};
+  place(att,'ATT');place(def,'DEF');
   return teams;
 }
 function roundRobin(n){const t=[...Array(n).keys()];if(n%2)t.push(-1);const m=t.length,out=[];for(let r=0;r<m-1;r++){for(let i=0;i<m/2;i++){const a=t[i],b=t[m-1-i];if(a>=0&&b>=0)out.push(r%2?[b,a]:[a,b])}t.splice(1,0,t.pop())}return out}
@@ -1031,6 +1043,7 @@ function needMe(){if(S.me)return true;toast('เลือกชื่อตั�
 const ACT={
   standStep:el=>{const all=weeksDesc(),i=all.findIndex(w=>w.id===S.standWeek)+(+el.dataset.d);if(all[i]){S.standWeek=all[i].id;render()}},
   gwSummary:el=>openSummary(el.dataset.w),
+  closeGw:el=>{const wid=el.dataset.w,on=el.dataset.v==='1';withAdmin(()=>save(()=>store.merge('weeks',wid,on?{closed:true,cfg:Object.fromEntries(Object.keys(DEF_CFG).map(k=>[k,S.config[k]]))}:{closed:false}),on?'ปิด GW แล้ว แต้มล็อกถาวร':'เปิด GW อีกครั้งแล้ว'))},
   tab:el=>{S.tab=el.dataset.k;render();window.scrollTo(0,0)},
   goTeam:el=>{S.teamWeekId=el.dataset.w;S.tab='team';render();window.scrollTo(0,0)},
   scrim:(el,e)=>{if(e.target===el)closeModal()},
@@ -1080,10 +1093,10 @@ const ACT={
   record:el=>{if(!needMe())return;openRecord(el.dataset.m)},
   liveStart:async el=>{if(!needMe())return;const m=S.matches[el.dataset.m];if(!m)return;const cur=liveOf(m.weekId);
     if(cur&&cur.id!==m.id){toast('จบแมตช์ที่กำลังเตะก่อน',true);return}
-    await save(async()=>{await store.merge('matches',m.id,{live:true,startedAt:Date.now(),by:S.me,events:[],gk:{a:lastGk(m,'a'),b:lastGk(m,'b')}});await freezePos(m.weekId)},'เริ่มแมตช์แล้ว');window.scrollTo({top:0,behavior:'smooth'})},
+    await save(async()=>{await store.merge('matches',m.id,{live:true,startedAt:Date.now(),by:S.me,events:[],gk:{a:lastGk(m,'a'),b:lastGk(m,'b')},roster:rosterNow(S.weeks[m.weekId],m)});await freezePos(m.weekId)},'เริ่มแมตช์แล้ว');window.scrollTo({top:0,behavior:'smooth'})},
   liveGoal:el=>{if(!needMe())return;const m=S.matches[el.dataset.m];pickGoal(m,el.dataset.s,async ev=>{const cur=S.matches[m.id];await save(()=>store.merge('matches',m.id,{events:[...(cur.events||[]),ev]}),'ประตู! '+(ev.type==='og'?'เข้าประตูตัวเอง':nm(ev.scorer)))})},
   liveRm:async el=>{const m=S.matches[el.dataset.m],ev=clone(m.events||[]);ev.splice(+el.dataset.i,1);await save(()=>store.merge('matches',m.id,{events:ev}),'ลบประตูแล้ว')},
-  liveEnd:async el=>{const m=S.matches[el.dataset.m];const [a,b]=score(m);const doc={...strip(clone(m)),live:false,played:true,at:Date.now(),by:m.by||S.me||null,votes:{}};
+  liveEnd:async el=>{const m=S.matches[el.dataset.m];const [a,b]=score(m);const doc={...strip(clone(m)),roster:m.roster||rosterNow(S.weeks[m.weekId],m),live:false,played:true,at:Date.now(),by:m.by||S.me||null,votes:{}};
     await save(async()=>{await store.set('matches',m.id,doc);await freezePos(m.weekId)},'จบแมตช์ '+a+'–'+b+' บันทึกแล้ว')},
   liveCancel:async el=>{if(el.dataset.arm!=='1'){el.dataset.arm='1';el.textContent='กดอีกครั้งเพื่อยกเลิกแมตช์นี้';return}
     const m=S.matches[el.dataset.m];await save(()=>store.merge('matches',m.id,{live:false,events:[],startedAt:null}),'ยกเลิกแล้ว แมตช์กลับเป็นยังไม่เตะ')},
