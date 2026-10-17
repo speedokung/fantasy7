@@ -89,6 +89,19 @@ export default async function handler(req, res) {
           if (wk && wk.closed) return res.status(403).json({ error: 'closed' });
         }
       }
+      // per-GW positions can't be changed once the GW is locked (filling in missing ones is still allowed)
+      if (col === 'weeks' && data && data.pos) {
+        const cur = parse(await redis.hget(key('weeks'), id));
+        const changed = cur && cur.pos && Object.keys(data.pos).some((k) => cur.pos[k] && cur.pos[k] !== data.pos[k]);
+        if (changed) {
+          let locked = !!cur.locked;
+          if (!locked) {
+            const all = (await redis.hgetall(key('matches'))) || {};
+            locked = Object.values(all).some((v) => { const m = parse(v); return m && m.weekId === id && (m.played || m.live); });
+          }
+          if (locked) return res.status(403).json({ error: 'locked' });
+        }
+      }
       // check-in (who came this GW) is admin-only once the GW exists
       if (col === 'weeks' && data && 'attendees' in data) {
         const cur = parse(await redis.hget(key('weeks'), id));
