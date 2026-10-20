@@ -865,12 +865,12 @@ async function drawSummary(d){
   try{await Promise.all(['700 40px "Chakra Petch"','600 40px "Chakra Petch"','700 30px Anuphan','500 30px Anuphan','600 30px Anuphan'].map(f=>document.fonts.load(f,'กขAa0')))}catch{}
   const ids=new Set([...d.byPts.map(x=>x.id),...d.picks.map(x=>x.manager)]);
   const imgs={};await Promise.all([...ids].map(async id=>{const p=P(id);const src=PHOTO_MEM[id]||(p?.photoV&&API?`/api/photo?id=${encodeURIComponent(id)}&v=${p.photoV}`:null);if(src)imgs[id]=await loadImg(src)}));
-  const W=1080,PAD=48,cv=document.createElement('canvas');cv.width=W;cv.height=5200;const g=cv.getContext('2d');
+  const W=1080,PAD=48,cv=document.createElement('canvas');cv.width=W;cv.height=5200;const g=cv.getContext('2d');g.direction='ltr';
   g.fillStyle=K.bg;g.fillRect(0,0,W,cv.height);g.textBaseline='alphabetic';
   const rr=(x,y,w,h,r,fill)=>{g.beginPath();g.roundRect(x,y,w,h,r);g.fillStyle=fill;g.fill()};
-  const txt=(t,x,y,{font=`500 28px ${FB}`,color=K.ink,align='left',max}={})=>{g.font=font;g.fillStyle=color;g.textAlign=align;let s=String(t);if(max){while(g.measureText(s).width>max&&s.length>1)s=s.slice(0,-2)+'…'}g.fillText(s,x,y);return g.measureText(s).width};
+  const txt=(t,x,y,{font=`500 28px ${FB}`,color=K.ink,align='left',max}={})=>{g.font=font;g.fillStyle=color;g.textAlign='left';let s=String(t);if(max){while(g.measureText(s).width>max&&s.length>1)s=s.slice(0,-2)+'…'}const wd=g.measureText(s).width;g.fillText(s,align==='right'?x-wd:align==='center'?x-wd/2:x,y);return wd};
   const av=(id,x,y,r)=>{g.save();g.beginPath();g.arc(x,y,r,0,Math.PI*2);g.closePath();const im=imgs[id];
-    if(im){g.clip();g.drawImage(im,x-r,y-r,r*2,r*2)}else{g.fillStyle=avColor(id);g.fill();const t=[...(nm(id)||'?')].find(c=>/[\p{L}\p{N}]/u.test(c)&&!'เแโใไ'.includes(c))||'?';g.font=`700 ${Math.round(r)}px ${FD}`;g.fillStyle='#fff';g.textAlign='center';g.textBaseline='middle';g.fillText(t,x,y+2);g.textBaseline='alphabetic'}g.restore()};
+    if(im){g.clip();g.drawImage(im,x-r,y-r,r*2,r*2)}else{g.fillStyle=avColor(id);g.fill();const t=[...(nm(id)||'?')].find(c=>/[\p{L}\p{N}]/u.test(c)&&!'เแโใไ'.includes(c))||'?';g.font=`700 ${Math.round(r)}px ${FD}`;g.fillStyle='#fff';g.textAlign='left';g.textBaseline='middle';g.fillText(t,x-g.measureText(t).width/2,y+2);g.textBaseline='alphabetic'}g.restore()};
   const posChip=(id,x,y)=>{const p=posAt(d.w,id)||P(id)?.pos;const t=POS_TH[p]||'';g.font=`700 20px ${FB}`;const wd=g.measureText(t).width+16;rr(x,y-22,wd,30,6,p==='DEF'?'#1E2E52':'#45261C');txt(t,x+8,y,{font:`700 20px ${FB}`,color:p==='DEF'?K.def:K.att});return wd};
   const section=(title,y)=>{txt(title,PAD,y,{font:`700 34px ${FD}`});g.fillStyle=K.turf;g.fillRect(PAD,y+14,56,5);return y+50};
   let y=0;
@@ -958,10 +958,10 @@ async function drawSchedule(w){
   const FD='"Chakra Petch","Anuphan",sans-serif',FB='"Anuphan","Noto Sans Thai",sans-serif';
   try{await Promise.all(['700 40px "Chakra Petch"','600 40px "Chakra Petch"','700 30px Anuphan','500 30px Anuphan','600 30px Anuphan'].map(f=>document.fonts.load(f,'กขAa0')))}catch{}
   const ms=matchesOf(w.id),teams=w.teams||[],any=ms.some(m=>m.played||m.live),done=ms.length&&ms.every(m=>m.played);
-  const W=1080,PAD=48,cv=document.createElement('canvas');cv.width=W;cv.height=6000;const g=cv.getContext('2d');
+  const W=1080,PAD=48,cv=document.createElement('canvas');cv.width=W;cv.height=6000;const g=cv.getContext('2d');g.direction='ltr';
   g.fillStyle=K.bg;g.fillRect(0,0,W,cv.height);
   const rr=(x,y,w2,h,r,fill)=>{g.beginPath();g.roundRect(x,y,w2,h,r);g.fillStyle=fill;g.fill()};
-  const txt=(t,x,y,{font=`500 28px ${FB}`,color=K.ink,align='left',max}={})=>{g.font=font;g.fillStyle=color;g.textAlign=align;let s2=String(t);if(max){while(g.measureText(s2).width>max&&s2.length>1)s2=s2.slice(0,-2)+'…'}g.fillText(s2,x,y);return g.measureText(s2).width};
+  const txt=(t,x,y,{font=`500 28px ${FB}`,color=K.ink,align='left',max}={})=>{g.font=font;g.fillStyle=color;g.textAlign='left';let s2=String(t);if(max){while(g.measureText(s2).width>max&&s2.length>1)s2=s2.slice(0,-2)+'…'}const wd=g.measureText(s2).width;g.fillText(s2,align==='right'?x-wd:align==='center'?x-wd/2:x,y);return wd};
   const bib=(x,y,c,wd=22,h=30)=>{g.fillStyle=c;g.beginPath();g.roundRect(x,y,wd,h,4);g.fill();g.strokeStyle='rgba(255,255,255,.35)';g.lineWidth=1.5;g.stroke()};
   const section=(title,y)=>{txt(title,PAD,y,{font:`700 34px ${FD}`});g.fillStyle=K.turf;g.fillRect(PAD,y+14,56,5);return y+50};
   g.fillStyle=K.turf;g.fillRect(0,0,W,10);let y=96;
