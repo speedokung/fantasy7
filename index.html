@@ -543,6 +543,7 @@ function heroCard(w,ms){
      <div class="row"><span class="small muted grow">กดเริ่มแล้วกด + ประตูระหว่างเตะ ทุกคนเห็นสกอร์สด</span><button class="btn sm ghost" data-act="record" data-m="${nx.id}">กรอกผลทีเดียว</button></div></section>`;
   if(total)return `<section class="card hero"><div class="sec-h"><h2>เตะครบ ${total} แมตช์แล้ว</h2><button class="btn sm" data-act="tab" data-k="home">ดูตารางคะแนน</button></div>
      <button class="btn pri bigbtn" data-act="gwSummary" data-w="${w.id}">สรุป GW · สร้างรูปแชร์ลง LINE</button>
+     <button class="btn bigbtn" data-act="exportStats" data-w="${w.id}">สถิตินักเตะ GW นี้ · สร้างรูป</button>
      ${w.closed?`<div class="row wrapx"><span class="pill ok">ปิด GW แล้ว · แต้มล็อกถาวร</span><span class="grow"></span><button class="btn sm ghost" data-act="closeGw" data-w="${w.id}" data-v="0">เปิด GW อีกครั้ง (แอดมิน)</button></div>`
        :`<button class="btn bigbtn" data-act="closeGw" data-w="${w.id}" data-v="1">ปิด GW · ล็อกแต้มถาวร (แอดมิน)</button><p class="small muted" style="margin:0">ปิดแล้ว ผลแมตช์ รายชื่อทีม โหวต และค่าแต้มของ GW นี้จะไม่เปลี่ยนอีก</p>`}</section>`;
   return '';
@@ -576,7 +577,7 @@ function vWeek(){
     ${nT&&nT<8?`<div class="row"><button class="btn sm" data-act="addTeam">+ เพิ่มทีม</button></div>`:''}
   </section>`;
   const perTeam=nT?w.teams.map((t,i)=>`${esc(t.name)} ${ms.filter(m=>m.a===i||m.b===i).length}`).join(' · '):'';
-  const fixtures=`<section class="card"><div class="sec-h"><h2>โปรแกรมและผล</h2>${ms.length?`<button class="btn sm" data-act="exportFx" data-w="${w.id}">Export ตาราง</button>`:''}${ms.some(counts)?`<button class="btn sm" data-act="gwSummary" data-w="${w.id}">สรุป GW</button>`:''}${nT>=2?`<button class="btn sm" data-act="addMatch">+ เพิ่มแมตช์</button>`:''}</div>
+  const fixtures=`<section class="card"><div class="sec-h"><h2>โปรแกรมและผล</h2>${ms.length?`<button class="btn sm" data-act="exportFx" data-w="${w.id}">Export ตาราง</button>`:''}${ms.some(counts)?`<button class="btn sm" data-act="gwSummary" data-w="${w.id}">สรุป GW</button><button class="btn sm" data-act="exportStats" data-w="${w.id}">สถิตินักเตะ</button>`:''}${nT>=2?`<button class="btn sm" data-act="addMatch">+ เพิ่มแมตช์</button>`:''}</div>
    ${nT>=2?`<div class="row wrapx small"><label for="nMatch">จำนวนแมตช์ทั้งหมด</label><input type="number" id="nMatch" min="1" max="40" value="${w.nMatches||ms.length||rrCount(nT)}" style="width:72px"><button class="btn sm" data-act="refix">จัดโปรแกรมอัตโนมัติ</button><span class="muted">พบกันหมด ${nT} ทีม = ${rrCount(nT)} แมตช์ · แต่ละทีมพักไม่เกิน ${Math.max(1,Math.ceil((nT-1)/2))} แมตช์ติด</span></div>`:''}
    ${perTeam?`<div class="small muted">จำนวนนัดของแต่ละทีม: ${perTeam}</div>`:''}
    <div class="row wrapx small"><span class="grow muted">${locked?'ทีม Fantasy ล็อกแล้ว':'ทีม Fantasy ยังเปิดให้เลือก จะล็อกเองเมื่อเริ่มแมตช์แรก'}</span>
@@ -950,6 +951,85 @@ async function openSummary(wid){
   const d=gwSummaryData(wid);if(!d.done.length){toast('GW นี้ยังไม่มีผลที่นับแต้ม',true);return}
   showImage(()=>drawSummary(d),`7s-GW${gwNo(d.w)}-${d.w.date}.png`,'สรุป GW'+gwNo(d.w),d.finished?'':'<span class="pill warn">ยังเตะไม่ครบ</span>');
 }
+function openPlayerStats(wid){const w=S.weeks[wid];if(!w||!matchesOf(wid).some(counts)){toast('GW นี้ยังไม่มีผลที่นับแต้ม',true);return}
+  const ms=matchesOf(wid);showImage(()=>drawPlayerStats(w),`7s-GW${gwNo(w)}-players-${w.date}.png`,'สถิตินักเตะ GW'+gwNo(w),ms.every(m=>m.played)?'':'<span class="pill warn">ยังเตะไม่ครบ</span>')}
+async function drawPlayerStats(w){
+  const K={bg:'#0E1813',card:'#16241C',row:'#1A2A21',line:'#24372B',ink:'#EAF2EC',muted:'#93A69A',turf:'#3DB27A',gold:'#F2C14E',silver:'#C9D3DA',bronze:'#D9935A',att:'#F07B55',def:'#7196F2',bad:'#F0736A',good:'#3DB27A'};
+  const FD='"Chakra Petch","Anuphan",sans-serif',FB='"Anuphan","Noto Sans Thai",sans-serif';
+  try{await Promise.all(['700 40px "Chakra Petch"','600 40px "Chakra Petch"','700 30px Anuphan','500 30px Anuphan','600 30px Anuphan'].map(f=>document.fonts.load(f,'กขAa0')))}catch{}
+  const wid=w.id,bw=calc().byWeek[wid]||{},ms=matchesOf(wid),done=ms.filter(counts);
+  // borrowed-player stats this GW (stats only)
+  const lg={};for(const m of done)for(const e of m.events||[]){if(e.type!=='goal')continue;
+    if(e.scorer==='loan'&&e.sLoan?.pid){(lg[e.sLoan.pid]=lg[e.sLoan.pid]||{g:0,a:0}).g++}
+    if(e.assist==='loan'&&e.aLoan?.pid){(lg[e.aLoan.pid]=lg[e.aLoan.pid]||{g:0,a:0}).a++}}
+  const after=w.date+'~';
+  const rows=Object.entries(bw).filter(([id,x])=>P(id)&&x.mp>0).map(([id,x])=>{const pb=priceInfo(id,w.date).price,pa=priceInfo(id,after).price;
+    return {id,...x,ga:x.g+x.a,pos:posAt(w,id),ti:teamIdxOf(w,id),price:pa,dp:pa-pb,lg:lg[id]||{g:0,a:0}}}).sort((a,b)=>b.pts-a.pts||b.ga-a.ga||b.g-a.g);
+  const imgs={};await Promise.all(rows.map(async r=>{const p=P(r.id);const src=PHOTO_MEM[r.id]||(p?.photoV&&API?`/api/photo?id=${encodeURIComponent(r.id)}&v=${p.photoV}`:null);if(src)imgs[r.id]=await loadImg(src)}));
+  const W=1080,PAD=44,cv=document.createElement('canvas');cv.width=W;cv.height=7000;const g=cv.getContext('2d');g.direction='ltr';
+  g.fillStyle=K.bg;g.fillRect(0,0,W,cv.height);
+  const rr=(x,y,w2,h,r,fill)=>{g.beginPath();g.roundRect(x,y,w2,h,r);g.fillStyle=fill;g.fill()};
+  const txt=(t,x,y,{font=`500 28px ${FB}`,color=K.ink,align='left',max}={})=>{g.font=font;g.fillStyle=color;g.textAlign='left';let s2=String(t);if(max){while(g.measureText(s2).width>max&&s2.length>1)s2=s2.slice(0,-2)+'…'}const wd=g.measureText(s2).width;g.fillText(s2,align==='right'?x-wd:align==='center'?x-wd/2:x,y);return wd};
+  const av=(id,x,y,r)=>{g.save();g.beginPath();g.arc(x,y,r,0,Math.PI*2);g.closePath();const im=imgs[id];
+    if(im){g.clip();g.drawImage(im,x-r,y-r,r*2,r*2)}else{g.fillStyle=avColor(id);g.fill();const t=[...(nm(id)||'?')].find(c=>/[\p{L}\p{N}]/u.test(c)&&!'เแโใไ'.includes(c))||'?';g.font=`700 ${Math.round(r)}px ${FD}`;g.fillStyle='#fff';g.textAlign='left';g.textBaseline='middle';g.fillText(t,x-g.measureText(t).width/2,y+2);g.textBaseline='alphabetic'}g.restore()};
+  const bib=(x,y,c,wd=16,h=22)=>{g.fillStyle=c;g.beginPath();g.roundRect(x,y,wd,h,3);g.fill();g.strokeStyle='rgba(255,255,255,.35)';g.lineWidth=1.2;g.stroke()};
+  const posChip=(ps,x,y)=>{rr(x,y-20,40,26,6,ps==='DEF'?'#1E2E52':'#45261C');txt(POS_TH[ps]||'',x+20,y-1,{font:`700 17px ${FB}`,color:ps==='DEF'?K.def:K.att,align:'center'})};
+  const section=(title,y,sub)=>{txt(title,PAD,y,{font:`700 34px ${FD}`});g.fillStyle=K.turf;g.fillRect(PAD,y+14,56,5);if(sub)txt(sub,W-PAD,y,{font:`500 21px ${FB}`,color:K.muted,align:'right'});return y+52};
+  // header
+  g.fillStyle=K.turf;g.fillRect(0,0,W,10);let y=90;
+  txt('7s FANTASY',PAD,y-20,{font:`700 30px ${FD}`,color:K.turf});txt('PLAYER STATS',W-PAD,y-20,{font:`700 26px ${FD}`,color:K.gold,align:'right'});
+  y+=58;txt('สถิตินักเตะ GW'+gwNo(w),PAD,y,{font:`700 76px ${FD}`});
+  y+=46;txt(thDate(w.date,true),PAD,y,{font:`500 30px ${FB}`,color:K.muted});
+  let goals=0;for(const m of done)goals+=(m.events||[]).length;
+  y+=24;let cx=PAD;y+=26;for(const c of [`${rows.length} คนลงเตะ`,`${done.length} แมตช์`,`${goals} ประตู`,`${rows.reduce((s2,r)=>s2+r.a,0)} แอสซิสต์`]){g.font=`600 24px ${FB}`;const wd=g.measureText(c).width+32;rr(cx,y-30,wd,44,22,K.card);txt(c,cx+16,y,{font:`600 24px ${FB}`});cx+=wd+10}
+  y+=64;
+  // leaders
+  y=section('ผู้นำแต่ละหมวด',y);
+  const lead=(key,filter)=>{const pool=rows.filter(filter||(()=>true));if(!pool.length)return null;const mx=Math.max(...pool.map(r=>r[key]));if(mx<=0&&key!=='pts')return null;const top=pool.filter(r=>r[key]===mx);return {v:mx,ids:top.map(r=>r.id)}};
+  const defRows=rows.filter(r=>r.pos==='DEF');
+  const tiles=[['แต้มสูงสุด',lead('pts'),'แต้ม',K.gold],['ดาวซัลโว',lead('g'),'ประตู',K.att],['จอมแอสซิสต์',lead('a'),'แอส',K.def],
+    ['มีส่วนร่วมกับประตู',lead('ga'),'G+A',K.turf],['คลีนชีตมากสุด',lead('cs'),'นัด',K.silver],['ตัวรับแต้มสูงสุด',lead('pts',r=>r.pos==='DEF'),'แต้ม',K.def]];
+  const tw=(W-PAD*2-24)/3,th=200;
+  tiles.forEach(([t,a,u,col],i)=>{const x=PAD+(i%3)*(tw+12),ty=y+Math.floor(i/3)*(th+12);rr(x,ty,tw,th,18,K.card);g.fillStyle=col;g.fillRect(x+22,ty+20,36,5);
+    txt(t,x+22,ty+58,{font:`600 22px ${FB}`,color:K.muted,max:tw-44});
+    if(!a){txt('—',x+22,ty+140,{font:`700 40px ${FD}`,color:K.muted});return}
+    av(a.ids[0],x+50,ty+108,26);txt(a.ids.map(nm).join(', '),x+86,ty+116,{font:`700 25px ${FB}`,max:tw-100});
+    txt(fmt(a.v),x+22,ty+178,{font:`700 52px ${FD}`,color:col});g.font=`700 52px ${FD}`;const nw=g.measureText(fmt(a.v)).width;txt(u+(a.ids.length>1?` · ${a.ids.length} คน`:''),x+30+nw,ty+176,{font:`600 21px ${FB}`,color:K.muted})});
+  y+=th*2+12+56;
+  // position split
+  const avg=k=>{const a=rows.filter(r=>r.pos===k);return a.length?a.reduce((s2,r)=>s2+r.pts,0)/a.length:0};
+  const aA=avg('ATT'),aD=avg('DEF'),mx=Math.max(aA,aD,1);
+  y=section('แต้มเฉลี่ยตามตำแหน่ง',y);
+  for(const [k,v,col] of [['ATT',aA,K.att],['DEF',aD,K.def]]){posChip(k,PAD,y+20);rr(PAD+56,y+4,W-PAD*2-56-90,22,11,K.card);rr(PAD+56,y+4,Math.max(8,(W-PAD*2-56-90)*v/mx),22,11,col);txt(fmt(+v.toFixed(1)),W-PAD,y+24,{font:`700 30px ${FD}`,align:'right'});y+=42}
+  y+=40;
+  // full table
+  y=section('ตารางสถิติทุกคน',y,'เรียงตามแต้ม');
+  const C=[['นัด',552],['ชนะ',612],['G',672],['A',728],['CS',790],['เสีย',852],['ราคา',940],['แต้ม',W-PAD-14]];
+  rr(PAD,y,W-PAD*2,48,12,K.card);txt('#',PAD+26,y+33,{font:`600 20px ${FD}`,color:K.muted,align:'center'});txt('นักเตะ',PAD+60,y+33,{font:`600 20px ${FB}`,color:K.muted});
+  C.forEach(([c,x])=>txt(c,x,y+33,{font:`600 20px ${FB}`,color:K.muted,align:'right'}));y+=56;
+  const medal=[K.gold,K.silver,K.bronze];const RH=64;
+  rows.forEach((r,i)=>{if(i%2===0)rr(PAD,y,W-PAD*2,RH,10,K.row);
+    if(i<3){g.fillStyle=medal[i];g.fillRect(PAD,y+10,5,RH-20)}
+    txt(i+1,PAD+26,y+41,{font:`700 24px ${FD}`,color:i<3?medal[i]:K.muted,align:'center'});
+    av(r.id,PAD+76,y+RH/2,20);
+    if(r.ti>=0)bib(PAD+104,y+21,bibOf(w,r.ti).c);
+    txt(nm(r.id),PAD+130,y+41,{font:`700 25px ${FB}`,max:250});posChip(r.pos,PAD+392,y+41);
+    const lgTag=(v,x)=>{if(v)txt('+'+v,x+4,y+24,{font:`700 15px ${FD}`,color:K.muted})};
+    [[r.mp,552],[r.w,612],[r.g,672,r.g?K.att:null],[r.a,728,r.a?K.def:null],[r.cs,790,r.cs?K.turf:null],[r.con,852]].forEach(([v,x,col])=>txt(v,x,y+42,{font:`600 26px ${FD}`,color:col||(v?K.ink:K.muted),align:'right'}));
+    lgTag(r.lg.g,672);lgTag(r.lg.a,728);
+    txt(r.price,912,y+42,{font:`600 26px ${FD}`,align:'right'});if(r.dp)txt((r.dp>0?'▲':'▼')+Math.abs(r.dp),948,y+40,{font:`700 18px ${FD}`,color:r.dp>0?K.good:K.bad,align:'right'});
+    txt(fmt(r.pts),W-PAD-14,y+44,{font:`700 32px ${FD}`,color:r.pts<0?K.bad:i<3?medal[i]:K.ink,align:'right'});
+    y+=RH});
+  y+=24;txt('G = ประตู · A = แอสซิสต์ · CS = คลีนชีต · เสีย = ลูกที่ทีมเสียรวม · ราคา = ราคา GW ถัดไป (▲▼ เทียบ GW นี้)',PAD,y,{font:`500 19px ${FB}`,color:K.muted,max:W-PAD*2});
+  if(Object.keys(lg).length){y+=30;txt('+ตัวเลขเล็ก = ประตู/แอสซิสต์ตอนไปเล่นเป็นตัวยืม (เก็บเป็นสถิติ ไม่นับแต้ม)',PAD,y,{font:`500 19px ${FB}`,color:K.muted,max:W-PAD*2})}
+  // guests (people from outside the group)
+  const guests={};for(const m of done)for(const e of m.events||[]){if(e.type!=='goal')continue;if(e.scorer==='loan'&&e.sLoan?.name){(guests[e.sLoan.name]=guests[e.sLoan.name]||{g:0,a:0}).g++}if(e.assist==='loan'&&e.aLoan?.name){(guests[e.aLoan.name]=guests[e.aLoan.name]||{g:0,a:0}).a++}}
+  const gl=Object.entries(guests).sort((a,b)=>(b[1].g+b[1].a)-(a[1].g+a[1].a));
+  if(gl.length){y+=56;y=section('คนนอกที่มายืมตัว',y);txt(gl.map(([n,x])=>`${n} ${x.g}G ${x.a}A`).join('  ·  '),PAD,y+6,{font:`600 24px ${FB}`,max:W-PAD*2});y+=30}
+  y+=40;g.fillStyle=K.line;g.fillRect(PAD,y,W-PAD*2,2);y+=40;
+  txt(location.host||'7s Fantasy',PAD,y,{font:`500 22px ${FB}`,color:K.muted});txt('สร้างจาก 7s Fantasy',W-PAD,y,{font:`500 22px ${FB}`,color:K.muted,align:'right'});y+=36;
+  const out=document.createElement('canvas');out.width=W;out.height=y;out.getContext('2d').drawImage(cv,0,0);return out;
+}
 function openSchedule(wid){const w=S.weeks[wid];if(!w||!matchesOf(wid).length){toast('GW นี้ยังไม่มีโปรแกรม',true);return}
   const any=matchesOf(wid).some(m=>m.played||m.live);
   showImage(()=>drawSchedule(w),`7s-GW${gwNo(w)}-${any?'results':'fixtures'}-${w.date}.png`,(any?'ผลการแข่ง':'โปรแกรมแข่ง')+' GW'+gwNo(w),'')}
@@ -1166,6 +1246,7 @@ const ACT={
   gwSummary:el=>openSummary(el.dataset.w),
   pfPos:el=>{S.pf.pos=el.dataset.v;render()},pfMode:el=>{S.pf.mode=el.dataset.v;render()},
   exportFx:el=>openSchedule(el.dataset.w),
+  exportStats:el=>openPlayerStats(el.dataset.w),
   evName:el=>{const m=S.matches[el.dataset.m],i=+el.dataset.i;editLoanNames(m,m.events[i],async ev=>{const evs=clone(S.matches[m.id].events);evs[i]=ev;await save(()=>store.merge('matches',m.id,{events:evs}),'บันทึกชื่อแล้ว')})},
   evNames:el=>{const m=S.matches[el.dataset.m],w=S.weeks[m.weekId];const list=(m.events||[]).map((e,i)=>({e,i})).filter(x=>hasLoanEv(x.e));
     modal(`<h3>ชื่อคนยืมตัว · ${esc(teamName(w,m.a))} vs ${esc(teamName(w,m.b))}</h3><p class="small muted" style="margin:0">เก็บเป็นสถิติ ไม่นับแต้ม Fantasy · แก้ได้แม้ปิด GW แล้ว</p>
