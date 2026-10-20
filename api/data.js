@@ -4,6 +4,7 @@ const COLS = ['players', 'weeks', 'matches', 'picks', 'config'];
 const key = (c) => 'f7:' + c;
 
 const parse = (v) => (typeof v === 'string' ? JSON.parse(v) : v);
+const stripNames = (evs) => (evs || []).map((e) => { const { sLoan, aLoan, ...r } = e || {}; return r; });
 function deepMerge(t, s) {
   for (const k in s) {
     const a = t[k], b = s[k];
@@ -86,7 +87,10 @@ export default async function handler(req, res) {
         const wid = (cur && cur.weekId) || (data && data.weekId);
         if (wid) {
           const wk = parse(await redis.hget(key('weeks'), wid));
-          if (wk && wk.closed) return res.status(403).json({ error: 'closed' });
+          // borrowed-player names are stats only (no fantasy points), so they may still be filled in after closing
+          const namesOnly = op === 'merge' && cur && data && Object.keys(data).length === 1 && Array.isArray(data.events) &&
+            JSON.stringify(stripNames(cur.events)) === JSON.stringify(stripNames(data.events));
+          if (wk && wk.closed && !namesOnly) return res.status(403).json({ error: 'closed' });
         }
       }
       // per-GW positions can't be changed once the GW is locked (filling in missing ones is still allowed)
