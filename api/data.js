@@ -67,7 +67,9 @@ export default async function handler(req, res) {
           const weekId = id.slice(0, id.indexOf('_'));
           const wk = parse(await redis.hget(key('weeks'), weekId));
           let locked = !!(wk && wk.locked);
-          if (!locked) {
+          if (wk && wk.closed) locked = true;
+          else if (wk && wk.unlocked) locked = false; // admin reopened fantasy picks
+          else if (!locked) {
             const all = (await redis.hgetall(key('matches'))) || {};
             locked = Object.values(all).some((v) => { const m = parse(v); return m && m.weekId === weekId && (m.played || m.live); });
           }
@@ -116,6 +118,13 @@ export default async function handler(req, res) {
         }
       }
       // locking / unlocking fantasy picks for a GW needs the admin PIN
+      if (col === 'weeks' && data && 'unlocked' in data) {
+        const cur = parse(await redis.hget(key('weeks'), id));
+        if (!!data.unlocked !== !!(cur && cur.unlocked)) {
+          const e = adminCheck(req.headers['x-admin']);
+          if (e) return res.status(403).json({ error: e });
+        }
+      }
       if (col === 'weeks' && data && 'locked' in data) {
         const cur = parse(await redis.hget(key('weeks'), id));
         if (!!data.locked !== !!(cur && cur.locked)) {

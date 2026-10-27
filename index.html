@@ -424,7 +424,9 @@ const weeksDesc=()=>Object.values(S.weeks).sort((a,b)=>a.date<b.date?1:-1);
 const gwNo=w=>Object.values(S.weeks).filter(x=>x.date<=w.date).length;
 const gwLabel=w=>'GW'+gwNo(w)+' · '+thDate(w.date);
 const matchesOf=wid=>Object.values(S.matches).filter(m=>m.weekId===wid).sort((a,b)=>(a.order??0)-(b.order??0)||(a.at||0)-(b.at||0));
-const isLocked=w=>!!w&&(w.locked||matchesOf(w.id).some(m=>m.played||m.live));
+const weekStarted=w=>!!w&&matchesOf(w.id).some(m=>m.played||m.live);
+const posLocked=w=>!!w&&(w.locked||weekStarted(w));
+const isLocked=w=>!!w&&(w.closed||!w.unlocked&&(w.locked||weekStarted(w)));
 const liveOf=wid=>matchesOf(wid).find(m=>m.live);
 const weekLive=w=>{const ms=matchesOf(w.id);return ms.some(m=>m.live)||(ms.some(m=>m.played)&&ms.some(m=>!m.played))};
 const playingNow=(w,pid)=>{const m=liveOf(w.id);if(!m)return false;const t=teamIdxOf(w,pid);if(t!==m.a&&t!==m.b)return false;return m.gk?.[t===m.a?'a':'b']!==pid};
@@ -571,17 +573,18 @@ function vWeek(){
     ${unassigned.length&&nT?`<div class="pool"><div class="small"><b>ยังไม่มีทีม ${unassigned.length} คน</b> <span class="muted">กดทีมที่จะใส่</span></div>
       ${unassigned.map(id=>`<div class="pool-row"><span class="who">${avatar(id,'s')}${posTag(P(id))} ${esc(nm(id))}</span><span class="row wrapx" style="gap:4px">${w.teams.map((t,j)=>`<button class="tbtn" data-act="assign" data-pid="${id}" data-t="${j}">${bibEl(w,j)}${esc(t.name)}</button>`).join('')}</span></div>`).join('')}</div>`:''}
     ${(()=>{const bad=(w.teams||[]).map((t,i)=>({t,i,b:teamBalance(w,t)})).filter(x=>x.t.players?.length&&!x.b.ok);
-      return bad.length?`<div class="balwarn"><b>ตำแหน่งบุก/รับยังไม่สมดุล:</b> ${bad.map(x=>`${esc(x.t.name)} (บุก ${x.b.a} · รับ ${x.b.d})`).join(', ')}<br>แต่ละทีมควรมีบุกกับรับต่างกันไม่เกิน 1 คน ${isLocked(w)?'ย้ายคนข้ามทีมเพื่อปรับ':'ย้ายคนข้ามทีม หรือกดป้าย บุก/รับ ที่ชื่อนักเตะเพื่อสลับตำแหน่งเฉพาะ GW นี้'}</div>`:''})()}
+      return bad.length?`<div class="balwarn"><b>ตำแหน่งบุก/รับยังไม่สมดุล:</b> ${bad.map(x=>`${esc(x.t.name)} (บุก ${x.b.a} · รับ ${x.b.d})`).join(', ')}<br>แต่ละทีมควรมีบุกกับรับต่างกันไม่เกิน 1 คน ${posLocked(w)?'ย้ายคนข้ามทีมเพื่อปรับ':'ย้ายคนข้ามทีม หรือกดป้าย บุก/รับ ที่ชื่อนักเตะเพื่อสลับตำแหน่งเฉพาะ GW นี้'}</div>`:''})()}
     ${nT?`<div class="teams">${w.teams.map((t,i)=>teamCard(w,t,i)).join('')}</div>`:''}
-    ${nT&&!isLocked(w)?'<p class="small muted" style="margin:0">กดป้าย บุก/รับ หน้าชื่อเพื่อสลับตำแหน่งเฉพาะ GW นี้ (มี * = ต่างจากตำแหน่งปกติ) แก้ได้จนกว่าจะล็อก</p>':''}
+    ${nT&&!posLocked(w)?'<p class="small muted" style="margin:0">กดป้าย บุก/รับ หน้าชื่อเพื่อสลับตำแหน่งเฉพาะ GW นี้ (มี * = ต่างจากตำแหน่งปกติ) แก้ได้จนกว่าจะล็อก</p>':''}
     ${nT&&nT<8?`<div class="row"><button class="btn sm" data-act="addTeam">+ เพิ่มทีม</button></div>`:''}
   </section>`;
   const perTeam=nT?w.teams.map((t,i)=>`${esc(t.name)} ${ms.filter(m=>m.a===i||m.b===i).length}`).join(' · '):'';
   const fixtures=`<section class="card"><div class="sec-h"><h2>โปรแกรมและผล</h2>${ms.length?`<button class="btn sm" data-act="exportFx" data-w="${w.id}">Export ตาราง</button>`:''}${ms.some(counts)?`<button class="btn sm" data-act="gwSummary" data-w="${w.id}">สรุป GW</button><button class="btn sm" data-act="exportStats" data-w="${w.id}">สถิตินักเตะ</button>`:''}${nT>=2?`<button class="btn sm" data-act="addMatch">+ เพิ่มแมตช์</button>`:''}</div>
    ${nT>=2?`<div class="row wrapx small"><label for="nMatch">จำนวนแมตช์ทั้งหมด</label><input type="number" id="nMatch" min="1" max="40" value="${w.nMatches||ms.length||rrCount(nT)}" style="width:72px"><button class="btn sm" data-act="refix">จัดโปรแกรมอัตโนมัติ</button><span class="muted">พบกันหมด ${nT} ทีม = ${rrCount(nT)} แมตช์ · แต่ละทีมพักไม่เกิน ${Math.max(1,Math.ceil((nT-1)/2))} แมตช์ติด</span></div>`:''}
    ${perTeam?`<div class="small muted">จำนวนนัดของแต่ละทีม: ${perTeam}</div>`:''}
-   <div class="row wrapx small"><span class="grow muted">${locked?'ทีม Fantasy ล็อกแล้ว':'ทีม Fantasy ยังเปิดให้เลือก จะล็อกเองเมื่อเริ่มแมตช์แรก'}</span>
-     ${!played?`<button class="btn sm" data-act="lock">${w.locked?'ปลดล็อกการเลือกทีม':'ล็อกการเลือกทีมเลย'} <span class="muted small">(แอดมิน)</span></button>`:''}</div>
+   <div class="row wrapx small"><span class="grow muted">${w.unlocked&&weekStarted(w)?'<b style="color:var(--warn)">แอดมินเปิดให้แก้ทีม Fantasy ชั่วคราว</b> (เตะไปแล้ว แต้มที่ได้ไปแล้วนับให้ทีมใหม่ด้วย)':locked?'ทีม Fantasy ล็อกแล้ว':'ทีม Fantasy ยังเปิดให้เลือก จะล็อกเองเมื่อเริ่มแมตช์แรก'}</span>
+     ${w.closed?'':!played?`<button class="btn sm" data-act="lock">${w.locked?'ปลดล็อกการเลือกทีม':'ล็อกการเลือกทีมเลย'} <span class="muted small">(แอดมิน)</span></button>`
+       :`<button class="btn sm" data-act="unlockFan">${w.unlocked?'ล็อกทีม Fantasy อีกครั้ง':'ปลดล็อกทีม Fantasy'} <span class="muted small">(แอดมิน)</span></button>`}</div>
    ${ms.length?`<div>${ms.map((m,k)=>fixture(w,m,k+1)).join('')}</div>`:`<div class="empty small">ยังไม่มีแมตช์ จัดทีมแล้วระบบจะจัดโปรแกรมให้ หรือกด + เพิ่มแมตช์</div>`}</section>`;
   const pts=calc().byWeek[w.id]||{};
   const tops=Object.entries(pts).filter(([id])=>P(id)).sort((a,b)=>b[1].pts-a[1].pts);
@@ -592,7 +595,7 @@ function vWeek(){
 function teamCard(w,t,i){
   const pl=(t.players||[]).filter(P);
   const pw=pl.reduce((a,id)=>a+priceInfo(id,w.date).price,0);
-  const edit=!isLocked(w)&&!w.closed,bal=teamBalance(w,t);
+  const edit=!posLocked(w)&&!w.closed,bal=teamBalance(w,t);
   const line=(id)=>`<div class="tp">${avatar(id,'s')}${posTagW(w,id,edit)}<span class="grow">${esc(nm(id))}</span><select data-change="move" data-pid="${id}" data-from="${i}" aria-label="ย้าย ${esc(nm(id))}"><option value="">ย้าย…</option>${w.teams.map((x,j)=>j===i?'':`<option value="${j}">${esc(x.name)}</option>`).join('')}<option value="-1">เอาออก</option></select></div>`;
   return `<div class="team"><div class="team-h">${bibEl(w,i)}<span class="grow">${esc(t.name)}</span><span class="small muted tn" title="ผลรวมราคานักเตะ">พลัง ${pw} · ${pl.length} คน</span><button class="btn ghost" data-act="editTeam" data-t="${i}">แก้</button></div>
    ${pl.length&&!bal.ok?`<div class="teamwarn" style="margin-top:8px">บุก ${bal.a} · รับ ${bal.d} ไม่สมดุล ควรเป็น ${Math.ceil(pl.length/2)}/${Math.floor(pl.length/2)}</div>`:''}
@@ -1253,9 +1256,9 @@ const ACT={
       ${list.map(({e,i})=>`<div class="ev">${bibEl(w,e.side==='a'?m.a:m.b)}<span class="grow">${evText(e)}</span><button class="btn sm ${needsName(e)?'pri':''}" data-act="enOne" data-i="${i}">${needsName(e)?'ใส่ชื่อ':'แก้'}</button></div>`).join('')}
       <div><button class="btn ghost" data-act="close">ปิด</button></div>`,{
       enOne:b=>{const i=+b.dataset.i;editLoanNames(m,S.matches[m.id].events[i],async ev=>{const evs=clone(S.matches[m.id].events);evs[i]=ev;await save(()=>store.merge('matches',m.id,{events:evs}),'บันทึกชื่อแล้ว');setTimeout(()=>ACT.evNames(el),300)},()=>ACT.evNames(el))}})},
-  gwPos:async el=>{const w=S.weeks[S.weekId],id=el.dataset.pid;if(isLocked(w)||w.closed){toast('GW นี้ล็อกแล้ว เปลี่ยนตำแหน่งไม่ได้',true);return}
+  gwPos:async el=>{const w=S.weeks[S.weekId],id=el.dataset.pid;if(posLocked(w)||w.closed){toast('GW นี้ล็อกแล้ว เปลี่ยนตำแหน่งไม่ได้',true);return}
     const nxt=posAt(w,id)==='ATT'?'DEF':'ATT';await save(()=>store.merge('weeks',w.id,{pos:{[id]:nxt}}),nm(id)+' เป็นตัว'+POS_TH[nxt]+'ใน GW นี้')},
-  closeGw:el=>{const wid=el.dataset.w,on=el.dataset.v==='1';withAdmin(()=>save(()=>store.merge('weeks',wid,on?{closed:true,cfg:Object.fromEntries(Object.keys(DEF_CFG).map(k=>[k,S.config[k]]))}:{closed:false}),on?'ปิด GW แล้ว แต้มล็อกถาวร':'เปิด GW อีกครั้งแล้ว'))},
+  closeGw:el=>{const wid=el.dataset.w,on=el.dataset.v==='1';withAdmin(()=>save(()=>store.merge('weeks',wid,on?{closed:true,unlocked:false,cfg:Object.fromEntries(Object.keys(DEF_CFG).map(k=>[k,S.config[k]]))}:{closed:false}),on?'ปิด GW แล้ว แต้มล็อกถาวร':'เปิด GW อีกครั้งแล้ว'))},
   tab:el=>{S.tab=el.dataset.k;render();window.scrollTo(0,0)},
   goTeam:el=>{S.teamWeekId=el.dataset.w;S.tab='team';render();window.scrollTo(0,0)},
   scrim:(el,e)=>{if(e.target===el)closeModal()},
@@ -1301,7 +1304,8 @@ const ACT={
      <div class="row"><button class="btn pri" data-act="amSave">เพิ่ม</button><button class="btn ghost" data-act="close">ยกเลิก</button></div>`,{
      amSave:async()=>{const a=+$('#amA').value,b=+$('#amB').value;if(a===b){toast('เลือกสองทีมที่ต่างกัน',true);return}closeModal();
       const o=matchesOf(w.id).reduce((x,m)=>Math.max(x,m.order??0),-1)+1;await save(()=>store.set('matches',rid('m_'),{weekId:w.id,a,b,order:o,played:false,events:[],votes:{}}),'เพิ่มแมตช์แล้ว')}})},
-  lock:()=>{const w=S.weeks[S.weekId];withAdmin(()=>save(()=>store.merge('weeks',w.id,{locked:!w.locked}),w.locked?'ปลดล็อกแล้ว':'ล็อกแล้ว'))},
+  unlockFan:()=>{const w=S.weeks[S.weekId];withAdmin(()=>save(()=>store.merge('weeks',w.id,{unlocked:!w.unlocked}),w.unlocked?'ล็อกทีม Fantasy แล้ว':'ปลดล็อกแล้ว ทุกคนแก้ทีม Fantasy ได้'))},
+  lock:()=>{const w=S.weeks[S.weekId];withAdmin(()=>save(()=>store.merge('weeks',w.id,{locked:!w.locked,unlocked:false}),w.locked?'ปลดล็อกแล้ว':'ล็อกแล้ว'))},
   record:el=>{if(!needMe())return;openRecord(el.dataset.m)},
   liveStart:async el=>{if(!needMe())return;const m=S.matches[el.dataset.m];if(!m)return;const cur=liveOf(m.weekId);
     if(cur&&cur.id!==m.id){toast('จบแมตช์ที่กำลังเตะก่อน',true);return}
