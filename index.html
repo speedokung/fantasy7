@@ -245,6 +245,112 @@ td.r,th.r{text-align:right}
 .cfg{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
 .cfg input{width:100%}
 .pitch-line{height:2px;background:repeating-linear-gradient(90deg,var(--turf) 0 10px,transparent 10px 16px);opacity:.5;border-radius:2px}
+/* match page: steps, big touch targets */
+:root{--score:#9A6A00}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--score:#F2C14E}}
+:root[data-theme="dark"]{--score:#F2C14E}
+.wkhead{display:flex;gap:8px}
+.wkhead select{flex:1;min-width:0;min-height:48px;border-radius:12px;font-size:16px;font-weight:600;padding:0 12px}
+.wkhead .btn,.btn.mid{min-height:48px;border-radius:12px;font-size:15px;padding:0 14px}
+.stepper{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.stp{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:8px 10px;display:grid;gap:1px;text-align:left;cursor:pointer;min-height:66px;min-width:0}
+.stp[aria-current="step"]{background:var(--turf-soft);border:1.5px solid var(--turf)}
+.stp .k{font-family:var(--display);font-size:12px;font-weight:700;color:var(--muted)}
+.stp .k.ok,.stp[aria-current="step"] .k{color:var(--turf)}
+.stp b{font-size:15px}
+.stp .s{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stp .s.warn{color:var(--warn)}
+.stepsec{display:grid;gap:10px;min-width:0}
+h2.sh{font-size:20px;font-family:var(--body);font-weight:700}
+.adm{font-size:12px;font-weight:700;color:var(--warn);background:var(--warn-soft);padding:3px 9px;border-radius:99px;font-family:var(--body);white-space:nowrap}
+.search{display:flex;align-items:center;gap:8px;min-height:48px;border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:0 12px;flex:1;min-width:0;color:var(--muted)}
+.search input{border:0!important;background:transparent!important;flex:1;min-width:0;min-height:44px;font-size:16px;outline:none;padding:0!important;color:var(--ink)}
+.btn.outline{min-height:48px;border-radius:12px;border-color:var(--turf);color:var(--turf);background:transparent;font-weight:700;white-space:nowrap}
+.segf{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px}
+.segf button{min-height:40px;border:0;border-radius:9px;background:none;font-weight:600;color:var(--muted);cursor:pointer;font-size:14px;white-space:nowrap}
+.segf button[aria-pressed="true"]{background:var(--ink);color:var(--bg);font-weight:700}
+.rows{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--surface)}
+.ck{display:flex;align-items:center;gap:12px;width:100%;min-height:60px;padding:0 14px;border:0;border-top:1px solid var(--line);background:var(--surface);cursor:pointer;text-align:left;transition:background .15s}
+.ck:first-child,.mrow:first-child{border-top:0}
+.ck[aria-pressed="true"]{background:var(--turf-soft)}
+.ck .nmx{flex:1;font-size:17px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.box{width:32px;height:32px;border-radius:9px;border:2px solid var(--muted);display:grid;place-items:center;flex:none;color:var(--turf-ink)}
+.box svg{opacity:0}
+.ck[aria-pressed="true"] .box{background:var(--turf);border-color:var(--turf)}
+.ck[aria-pressed="true"] .box svg{opacity:1}
+.bbar{position:sticky;bottom:0;z-index:4;margin:0 -16px;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));background:var(--surface);border-top:1px solid var(--line);display:flex;align-items:center;gap:12px}
+.bnum{font-family:var(--display);font-size:22px;font-weight:700;line-height:1.15}
+.bbtn{min-height:56px;border-radius:14px;font-size:17px;padding:0 20px;white-space:nowrap}
+.bigsel{min-height:48px!important;border-radius:12px!important;font-size:16px;font-weight:600}
+.tcard{border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden}
+.tcard-h{display:flex;align-items:center;gap:10px;width:100%;min-height:60px;padding:0 14px;border:0;background:none;cursor:pointer;text-align:left}
+.tcard-h .bib{width:20px;height:26px}
+.tcard-h .tnm{flex:1;font-size:17px;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chev{flex:none;color:var(--muted);transition:transform .2s}
+.tcard[data-open="1"] .chev{transform:rotate(180deg)}
+.tcard-b{padding:0 12px 14px;display:grid;gap:10px}
+.tcard-b .btn{min-height:44px;border-radius:10px}
+.pchipx{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:4px 10px 4px 5px;border-radius:99px;border:1px solid var(--line);background:var(--sunk);cursor:pointer;font-weight:600;font-size:15px}
+.pchipx .av{width:32px;height:32px}
+.pchipx.loan{padding-left:12px;color:var(--muted);font-style:italic;cursor:default}
+.xbtn{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:none;font-size:22px;line-height:1;color:var(--muted);cursor:pointer;flex:none;display:grid;place-items:center}
+.xbtn.sm{width:34px;height:34px;font-size:18px}
+.mrow{display:grid;grid-template-columns:22px minmax(0,1fr) auto;align-items:center;gap:10px;width:100%;min-height:62px;padding:0 12px;border:0;border-top:1px solid var(--line);background:var(--surface);cursor:pointer;text-align:left}
+.mrow .no{font-family:var(--display);font-weight:700;color:var(--muted);font-size:15px}
+.mrow .mt{display:flex;align-items:center;gap:7px;font-size:16px;font-weight:600;white-space:nowrap;min-width:0}
+.mrow .mt .n{overflow:hidden;text-overflow:ellipsis;min-width:0}
+.mrow .mt .bib{width:12px;height:16px}
+.mrow .msc{font-family:var(--display);font-size:19px;font-weight:700;padding:0 3px;color:var(--score);flex:none}
+.mrow .msc.muted{color:var(--muted);font-size:15px}
+.mrow.next{background:var(--turf-soft)}
+.mrow.live{background:var(--bad-soft)}
+.stchip{font-size:13px;font-weight:700;padding:4px 10px;border-radius:99px;white-space:nowrap;background:var(--sunk);color:var(--muted)}
+.stchip.ok,.stchip.next{background:var(--turf-soft);color:var(--good)}
+.stchip.warn{background:var(--warn-soft);color:var(--warn)}
+.stchip.live{background:var(--bad);color:#fff}
+.mrow.next .stchip.next{background:var(--surface)}
+.bigbtn{min-height:58px;font-size:17px;border-radius:14px;width:100%;font-weight:700}
+.bigbtn.play{min-height:60px;font-size:19px;display:flex;align-items:center;justify-content:center;gap:10px}
+.evbox{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--surface)}
+.evrow{display:flex;align-items:center;gap:10px;min-height:56px;padding:4px 10px 4px 14px;border-top:1px solid var(--line);font-size:16px}
+.evrow:first-child{border-top:0}
+.evrow .btn{min-height:40px;border-radius:10px}
+.btn.warnbtn{border-color:var(--warn);background:var(--warn-soft);color:var(--warn);font-weight:700}
+.gksel{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600}
+.gksel select{min-height:44px}
+.recby{display:flex;align-items:center;gap:10px;background:var(--sunk);border-radius:12px;padding:12px 14px}
+.recby .btn{min-height:48px;border-radius:12px}
+.hero .btn.ghost.mid{border:1px solid var(--line);color:var(--muted)}
+.boardbox{background:var(--sunk);border-radius:18px;padding:18px 12px}
+.sscrim{position:fixed;inset:0;background:rgba(4,8,6,.55);z-index:15;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:22px 22px 0 0;border:1px solid var(--line);border-bottom:0;padding:10px 16px calc(22px + env(safe-area-inset-bottom,0px));display:grid;gap:12px;align-content:start}
+@media (min-width:640px){.sscrim{align-items:center;padding:12px}.sheet{border-radius:18px;border-bottom:1px solid var(--line)}}
+.grab{width:44px;height:5px;border-radius:99px;background:var(--line);justify-self:center}
+.sh-h{display:flex;align-items:center;gap:10px}
+.sh-h h3{flex:1;font-size:20px;font-family:var(--body);min-width:0}
+.lbl{font-size:13px;font-weight:700;color:var(--muted);letter-spacing:.04em;margin-top:2px}
+.group{background:var(--sunk);border-radius:14px;overflow:hidden}
+.gi{display:flex;align-items:center;gap:10px;width:100%;min-height:60px;padding:8px 14px;border:0;border-top:1px solid var(--line);background:none;text-align:left;font-weight:600;font-size:16px;cursor:pointer}
+.gi:first-child{border-top:0}
+.gi.group{border:0;background:var(--sunk)}
+.gi .sub{display:block;font-size:13px;color:var(--muted);font-weight:500}
+.stepbtn{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-size:22px;cursor:pointer;flex:none}
+.switch{width:60px;height:34px;border-radius:99px;background:var(--line);position:relative;flex:none}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:28px;height:28px;border-radius:50%;background:var(--surface);transition:left .15s}
+.switch.on{background:var(--turf)}.switch.on::after{left:29px;background:var(--turf-ink)}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.tile{min-height:64px;border-radius:14px;border:1px solid var(--line);background:var(--sunk);font-weight:700;font-size:14px;cursor:pointer;padding:8px}
+.tile.tl{display:flex;align-items:center;gap:10px;text-align:left;font-size:15px}
+.tile.tl .bib{width:16px;height:22px}
+.tile.tl .grow span{display:block;font-weight:500}
+.tile[aria-current="true"]{border:2px solid var(--turf);background:var(--turf-soft);opacity:1}
+.tile:disabled{cursor:default}
+.vbtn{min-height:60px;border-radius:14px;border:1px solid var(--line);background:var(--surface);font-size:18px;font-weight:700;cursor:pointer}
+.vbtn.up{color:var(--good)}.vbtn.dn{color:var(--bad)}
+.vbtn.up[aria-pressed="true"]{border:2px solid var(--turf);background:var(--turf-soft)}
+.vbtn.dn[aria-pressed="true"]{border:2px solid var(--bad);background:var(--bad-soft)}
+@media (max-width:380px){.segf button{font-size:13px}.bbtn{padding:0 14px;font-size:16px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -265,6 +371,7 @@ td.r,th.r{text-align:right}
   <div id="banner"></div>
   <main id="main"></main>
 </div>
+<div id="sheetRoot"></div>
 <div id="modalRoot"></div>
 <div id="toastRoot"></div>
 
@@ -305,7 +412,86 @@ function ingest(col,map){
   ver++;schedule();
 }
 const strip=d=>{const {id,...r}=d;return r};
+/* live-recording ops: same logic as api/_match.js, applied optimistically here */
+const MATCH_OPS = ['start', 'addEvent', 'rmEvent', 'endMatch', 'cancelLive', 'claim', 'evNames'];
+
+const ownsLive = (cur, me) => !cur.recorder || cur.recorder === me;
+
+function matchOp(cur, op, data, me, now) {
+  if (!cur) return { error: 'not_found' };
+  data = data || {};
+  const doc = JSON.parse(JSON.stringify(cur));
+  const evs = Array.isArray(doc.events) ? doc.events : (doc.events = []);
+  const find = () => {
+    if (data.eid) return evs.findIndex((e) => e && e.eid === data.eid);
+    const i = Number(data.i);
+    return Number.isInteger(i) && evs[i] && !evs[i].eid ? i : -1;
+  };
+
+  if (op === 'evNames') {
+    // borrowed-player names are stats only, so anyone may fill them in at any time
+    const i = find();
+    if (i < 0) return { error: 'gone' };
+    for (const k of ['sLoan', 'aLoan']) {
+      const o = data[k];
+      if (o && typeof o === 'object' && (o.pid || o.name)) evs[i][k] = o.pid ? { pid: String(o.pid).slice(0, 120) } : { name: String(o.name).slice(0, 40) };
+      else if (k in data) delete evs[i][k];
+    }
+    return { doc };
+  }
+  if (!me) return { error: 'need_me' };
+
+  if (op === 'start') {
+    if (doc.live) return doc.recorder === me ? { same: true } : { error: 'busy', recorder: doc.recorder || null };
+    if (doc.played) return { error: 'played' };
+    Object.assign(doc, {
+      live: true, recorder: me, by: me, startedAt: now, events: [], votes: {},
+      gk: data.gk && typeof data.gk === 'object' ? { a: data.gk.a || 'loan', b: data.gk.b || 'loan' } : { a: 'loan', b: 'loan' },
+    });
+    if (data.roster && typeof data.roster === 'object') doc.roster = data.roster;
+    return { doc };
+  }
+  if (op === 'claim') {
+    if (!doc.live) return { error: 'not_live' };
+    if (doc.recorder === me) return { same: true };
+    doc.recorder = me;
+    return { doc };
+  }
+  if (op === 'endMatch') {
+    if (!doc.live) return doc.played ? { same: true } : { error: 'not_live' };
+    if (!ownsLive(doc, me)) return { error: 'not_recorder', recorder: doc.recorder };
+    Object.assign(doc, { live: false, played: true, at: now, by: me, votes: {} });
+    delete doc.recorder;
+    if (!doc.roster && data.roster && typeof data.roster === 'object') doc.roster = data.roster;
+    return { doc };
+  }
+  if (!doc.live) return { error: 'not_live' };
+  if (!ownsLive(doc, me)) return { error: 'not_recorder', recorder: doc.recorder };
+
+  if (op === 'addEvent') {
+    const ev = data.ev;
+    if (!ev || typeof ev !== 'object' || !ev.eid || !['goal', 'og'].includes(ev.type) || !['a', 'b'].includes(ev.side)) return { error: 'bad_data' };
+    if (evs.some((e) => e && e.eid === ev.eid)) return { same: true };
+    evs.push(ev);
+    return { doc };
+  }
+  if (op === 'rmEvent') {
+    const i = find();
+    if (i < 0) return { same: true };
+    evs.splice(i, 1);
+    return { doc };
+  }
+  if (op === 'cancelLive') {
+    Object.assign(doc, { live: false, events: [], startedAt: null });
+    delete doc.recorder;
+    return { doc };
+  }
+  return { error: 'bad_op' };
+}
+
+const OP_ERR={busy:'มีคนเริ่มบันทึกแมตช์นี้ไปแล้ว',not_recorder:'มีคนอื่นบันทึกแมตช์นี้อยู่',not_live:'แมตช์นี้จบไปแล้ว',played:'แมตช์นี้บันทึกผลไปแล้ว',gone:'ประตูนี้ถูกลบไปแล้ว',need_me:'เลือกชื่อตัวเองก่อน',busy_lock:'เซิร์ฟเวอร์ยุ่ง ลองใหม่อีกครั้ง'};
 function applyLocal(op,col,id,data){
+  if(MATCH_OPS.includes(op)){const r=matchOp(RAW.matches[id],op,data,S.me,Date.now());if(r.error)throw{code:OP_ERR[r.error]||r.error,soft:true};if(r.same)return;RAW.matches[id]=r.doc;ingest('matches',clone(RAW.matches));return}
   if(op==='set')RAW[col][id]=clone(data);
   else if(op==='merge'){if(!RAW[col][id])throw{code:'not_found'};deepMerge(RAW[col][id],clone(data))}
   else delete RAW[col][id];
@@ -323,12 +509,14 @@ async function send(op,col,id,data){
     if(j.error==='locked'){refresh(true);throw{code:'GW นี้ล็อกทีมแล้ว'}}
     if(j.error==='closed'){refresh(true);throw{code:'GW นี้ปิดแล้ว แก้ไม่ได้'}}
     refresh(true);const who=S.me;forgetMe();if(who&&P(who))setTimeout(()=>becomeMe(who),50);throw{code:'ต้องยืนยันตัวตนด้วยรหัสก่อน'}}
+  if(r.status===409||r.status===503){const j=await r.json().catch(()=>({}));refresh(true);throw{code:(j.error==='not_recorder'||j.error==='busy')&&j.recorder&&P(j.recorder)?nm(j.recorder)+' กำลังบันทึกแมตช์นี้อยู่':OP_ERR[j.error]||j.error,soft:true}}
   if(!r.ok){refresh(true);throw{code:(await r.json().catch(()=>({}))).error||r.status}}
 }
 const store={
   set:(col,id,data)=>send('set',col,id,data),
   merge:(col,id,data)=>send('merge',col,id,data),
-  del:(col,id)=>send('del',col,id)
+  del:(col,id)=>send('del',col,id),
+  op:(id,op,data)=>send(op,'matches',id,data||{})
 };
 let busy=false;
 async function refresh(force){
@@ -349,7 +537,7 @@ async function refresh(force){
 }
 let bannerMsg='';function setBanner(m){if(m===bannerMsg)return;bannerMsg=m;render()}
 function askPin(){modal(`<h3>ใส่รหัสก๊วน</h3><p class="small muted" style="margin:0">ก๊วนนี้ตั้งรหัสไว้ก่อนแก้ข้อมูล ถามคนดูแลลีก</p><div class="field"><label for="pinIn">รหัส</label><input type="text" id="pinIn" autocomplete="off"></div><div class="row"><button class="btn pri" data-act="pinSave">ตกลง</button><button class="btn ghost" data-act="close">ยกเลิก</button></div>`,{pinSave:()=>{lsSet('f7_pin',$('#pinIn').value.trim());closeModal();refresh(true);toast('บันทึกรหัสแล้ว ลองทำรายการอีกครั้ง')}})}
-async function save(fn,okMsg){try{await fn();if(okMsg)toast(okMsg);return true}catch(e){toast('บันทึกไม่สำเร็จ ('+(e&&(e.code||e.message)||'error')+') ลองใหม่อีกครั้ง',true);return false}}
+async function save(fn,okMsg){try{await fn();if(okMsg)toast(okMsg);return true}catch(e){toast(e&&e.soft?e.code:'บันทึกไม่สำเร็จ ('+(e&&(e.code||e.message)||'error')+') ลองใหม่อีกครั้ง',true);return false}}
 
 /* ---------- scoring engine ---------- */
 const blank=()=>({pts:0,g:0,a:0,cs:0,mp:0,w:0,con:0,og:0});
@@ -461,6 +649,7 @@ function render(){
   $('#banner').innerHTML=bannerMsg?`<div class="banner" style="margin-top:12px">${esc(bannerMsg)}</div>`:'';
   const v={home:vHome,week:vWeek,team:vTeam,players:vPlayers,rules:vRules}[S.tab];
   $('#main').innerHTML=S.loaded?v():`<div class="card empty">กำลังโหลดข้อมูล…</div>`;
+  renderSheet();
   if(R&&!R.sub)renderRecord();
   if(API&&S.loaded&&!S.me&&!gateShown)setTimeout(maybeGate,0);
 }
@@ -527,105 +716,195 @@ function onboarding(){
 }
 
 /* ----- week ----- */
+const TICK='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="5 12.5 10 17.5 19 7"></polyline></svg>';
+const CHEV='<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+const recOf=m=>m.recorder||null;
+const isRecorder=m=>!m.recorder||m.recorder===S.me;
+function evLine(w,m,e,i,ctl){
+  const key=e.eid?`data-e="${esc(e.eid)}"`:`data-i="${i}"`;
+  return `<div class="evrow">${bibEl(w,e.side==='a'?m.a:m.b)}<span class="grow">${e.type==='og'?`${esc(nm(e.scorer))} <span class="muted">(เข้าประตูตัวเอง)</span>`:`<b>${esc(scorerLbl(e))}</b>${e.assist?` <span class="muted">แอสซิสต์ ${esc(assistLbl(e))}</span>`:''}`}</span>
+   ${hasLoanEv(e)&&(ctl||needsName(e))?`<button class="btn ${needsName(e)?'warnbtn':'ghost'}" data-act="evName" data-m="${m.id}" ${key}>${needsName(e)?'ใส่ชื่อ':'✎'}</button>`:''}
+   ${ctl?`<button class="xbtn sm" data-act="liveRm" data-m="${m.id}" ${key} aria-label="ลบประตูนี้">×</button>`:''}</div>`}
 function heroCard(w,ms){
   const total=ms.length,no=m=>ms.indexOf(m)+1;
   const lm=ms.find(m=>m.live),nx=ms.find(m=>!m.played&&!m.live);
-  if(lm){const [a,b]=score(lm);const pts=calc().byWeek[w.id]||{};
-    const gkSel=sd=>{const ti=sd==='a'?lm.a:lm.b;return `<label class="row small" style="gap:6px">${bibEl(w,ti)} โกล <select data-change="liveGk" data-m="${lm.id}" data-s="${sd}"><option value="loan" ${(lm.gk?.[sd]||'loan')==='loan'?'selected':''}>ยืมตัว / คนนอก</option>${(w.teams?.[ti]?.players||[]).filter(P).map(id=>`<option value="${id}" ${lm.gk?.[sd]===id?'selected':''}>${esc(nm(id))}</option>`).join('')}</select></label>`};
-    return `<section class="card hero live"><div class="sec-h"><span class="livepill">LIVE</span><span class="small muted">แมตช์ที่ ${no(lm)}/${total} · บันทึกโดย ${esc(lm.by?nm(lm.by):'-')}</span></div>
+  if(lm){const [a,b]=score(lm),mine=isRecorder(lm),evs=lm.events||[];
+    const gkSel=sd=>{const ti=sd==='a'?lm.a:lm.b;return `<label class="gksel">${bibEl(w,ti)}<span>โกล</span><select data-change="liveGk" data-m="${lm.id}" data-s="${sd}"><option value="loan" ${(lm.gk?.[sd]||'loan')==='loan'?'selected':''}>ยืมตัว / คนนอก</option>${(w.teams?.[ti]?.players||[]).filter(P).map(id=>`<option value="${id}" ${lm.gk?.[sd]===id?'selected':''}>${esc(nm(id))}</option>`).join('')}</select></label>`};
+    const gkTxt=['a','b'].map(sd=>{const g=lm.gk?.[sd];return g&&g!=='loan'?`โกล${esc(teamName(w,sd==='a'?lm.a:lm.b))}: ${esc(nm(g))}`:''}).filter(Boolean).join(' · ');
+    return `<section class="card hero live"><div class="sec-h"><span class="livepill">LIVE</span><span class="small muted">แมตช์ที่ ${no(lm)}/${total}</span></div>
      <div class="bigboard"><div class="t">${bibEl(w,lm.a)}<span>${esc(teamName(w,lm.a))}</span></div><div class="s tn">${a} – ${b}</div><div class="t">${bibEl(w,lm.b)}<span>${esc(teamName(w,lm.b))}</span></div></div>
-     <div class="goalbtns"><button class="goalbtn" data-act="liveGoal" data-m="${lm.id}" data-s="a" style="border-color:${bibOf(w,lm.a).c}">+ ประตู ${esc(teamName(w,lm.a))}</button><button class="goalbtn" data-act="liveGoal" data-m="${lm.id}" data-s="b" style="border-color:${bibOf(w,lm.b).c}">+ ประตู ${esc(teamName(w,lm.b))}</button></div>
-     <div>${(lm.events||[]).map((e,i)=>`<div class="ev">${bibEl(w,e.side==='a'?lm.a:lm.b)}<span class="grow">${e.type==='og'?`${esc(nm(e.scorer))} <span class="muted">(เข้าประตูตัวเอง)</span>`:`<b>${esc(scorerLbl(e))}</b>${e.assist?` <span class="muted">แอสซิสต์ ${esc(assistLbl(e))}</span>`:''}`}</span>${hasLoanEv(e)?`<button class="btn sm ghost" data-act="evName" data-m="${lm.id}" data-i="${i}" aria-label="ใส่ชื่อคนยืมตัว">✎</button>`:''}<button class="btn sm ghost" data-act="liveRm" data-m="${lm.id}" data-i="${i}" aria-label="ลบประตูนี้">×</button></div>`).join('')||'<div class="small muted">ยังไม่มีประตู</div>'}</div>
-     <div class="row wrapx" style="gap:14px">${gkSel('a')}${gkSel('b')}</div>
+     ${mine?`<div class="goalbtns"><button class="goalbtn" data-act="liveGoal" data-m="${lm.id}" data-s="a" style="border-color:${bibOf(w,lm.a).c}">+ ประตู ${esc(teamName(w,lm.a))}</button><button class="goalbtn" data-act="liveGoal" data-m="${lm.id}" data-s="b" style="border-color:${bibOf(w,lm.b).c}">+ ประตู ${esc(teamName(w,lm.b))}</button></div>`
+       :`<div class="recby"><span class="livedot"></span><span class="grow"><b>${esc(nm(recOf(lm)))}</b> กำลังบันทึกแมตช์นี้<br><span class="small muted">สกอร์อัปเดตเองทุกไม่กี่วินาที</span></span><button class="btn" data-act="claim" data-m="${lm.id}">ขอบันทึกแทน</button></div>`}
+     <div class="evbox">${evs.map((e,i)=>evLine(w,lm,e,i,mine)).join('')||'<div class="small muted" style="padding:12px 14px">ยังไม่มีประตู</div>'}</div>
+     ${mine?`<div class="row wrapx" style="gap:10px">${gkSel('a')}${gkSel('b')}</div>
      <button class="btn pri bigbtn" data-act="liveEnd" data-m="${lm.id}">จบแมตช์ · บันทึกผล ${a}–${b}</button>
-     <div class="row wrapx">${nx?`<span class="small muted grow">ถัดไป: ${esc(teamName(w,nx.a))} vs ${esc(teamName(w,nx.b))}</span>`:'<span class="grow"></span>'}<button class="btn sm ghost" data-act="liveCancel" data-m="${lm.id}">ยกเลิกแมตช์นี้</button></div></section>`}
-  if(nx)return `<section class="card hero"><div class="sec-h"><div class="eyebrow">แมตช์ถัดไป · ${no(nx)}/${total}</div><span class="small muted">${ms.filter(m=>m.played).length} แมตช์จบแล้ว</span></div>
+     <div class="row wrapx">${nx?`<span class="small muted grow">ถัดไป: ${esc(teamName(w,nx.a))} vs ${esc(teamName(w,nx.b))}</span>`:'<span class="grow"></span>'}<button class="btn ghost" data-act="liveCancel" data-m="${lm.id}">ยกเลิกแมตช์นี้</button></div>`
+     :gkTxt?`<div class="small muted">${gkTxt} (ไม่นับแต้ม)</div>`:''}</section>`}
+  if(nx){const rest=(()=>{let best=null;for(const ti of [nx.a,nx.b]){let k=0;for(let j=ms.indexOf(nx)-1;j>=0&&ms[j].a!==ti&&ms[j].b!==ti;j--)k++;if(ms.slice(0,ms.indexOf(nx)).some(m=>m.a===ti||m.b===ti)&&k>=2&&(!best||k>best.k))best={ti,k}}return best})();
+    return `<section class="card hero"><div class="sec-h"><div class="eyebrow">แมตช์ถัดไป · ${no(nx)}/${total}</div>${rest?`<span class="small muted">${esc(teamName(w,rest.ti))}พักมา ${rest.k} นัด</span>`:''}</div>
      <div class="bigboard"><div class="t">${bibEl(w,nx.a)}<span>${esc(teamName(w,nx.a))}</span></div><div class="vs">VS</div><div class="t">${bibEl(w,nx.b)}<span>${esc(teamName(w,nx.b))}</span></div></div>
-     <button class="btn pri bigbtn" data-act="liveStart" data-m="${nx.id}">เริ่มแมตช์ · บันทึกสด</button>
-     <div class="row"><span class="small muted grow">กดเริ่มแล้วกด + ประตูระหว่างเตะ ทุกคนเห็นสกอร์สด</span><button class="btn sm ghost" data-act="record" data-m="${nx.id}">กรอกผลทีเดียว</button></div></section>`;
-  if(total)return `<section class="card hero"><div class="sec-h"><h2>เตะครบ ${total} แมตช์แล้ว</h2><button class="btn sm" data-act="tab" data-k="home">ดูตารางคะแนน</button></div>
+     <button class="btn pri bigbtn play" data-act="liveStart" data-m="${nx.id}"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4v16l13-8z"></path></svg>เริ่มแมตช์ · บันทึกสด</button>
+     <button class="btn ghost mid" data-act="record" data-m="${nx.id}">กรอกผลทีเดียว</button></section>`}
+  if(total)return `<section class="card hero"><div class="sec-h"><h2>เตะครบ ${total} แมตช์แล้ว</h2><button class="btn" data-act="tab" data-k="home">ตารางคะแนน</button></div>
      <button class="btn pri bigbtn" data-act="gwSummary" data-w="${w.id}">สรุป GW · สร้างรูปแชร์ลง LINE</button>
-     <button class="btn bigbtn" data-act="exportStats" data-w="${w.id}">สถิตินักเตะ GW นี้ · สร้างรูป</button>
-     ${w.closed?`<div class="row wrapx"><span class="pill ok">ปิด GW แล้ว · แต้มล็อกถาวร</span><span class="grow"></span><button class="btn sm ghost" data-act="closeGw" data-w="${w.id}" data-v="0">เปิด GW อีกครั้ง (แอดมิน)</button></div>`
-       :`<button class="btn bigbtn" data-act="closeGw" data-w="${w.id}" data-v="1">ปิด GW · ล็อกแต้มถาวร (แอดมิน)</button><p class="small muted" style="margin:0">ปิดแล้ว ผลแมตช์ รายชื่อทีม โหวต และค่าแต้มของ GW นี้จะไม่เปลี่ยนอีก</p>`}</section>`;
+     <button class="btn bigbtn" data-act="exportStats" data-w="${w.id}">สถิตินักเตะ GW นี้</button>
+     ${w.closed?`<span class="pill ok" style="justify-self:start">ปิด GW แล้ว · แต้มล็อกถาวร</span>`:`<button class="btn bigbtn" data-act="closeGw" data-w="${w.id}" data-v="1">ปิด GW · ล็อกแต้มถาวร <span class="adm">แอดมิน</span></button>`}</section>`;
   return '';
+}
+function weekStep(w){
+  if(S.wstep&&S.wstep.w===w.id)return S.wstep.k;
+  return matchesOf(w.id).length?'play':(w.teams||[]).length?'teams':'checkin';
 }
 function vWeek(){
   const ws=weeksDesc();
-  if(!S.weekId||!S.weeks[S.weekId])S.weekId=ws[0]?.id||null;
+  if(!S.weekId||!S.weeks[S.weekId])S.weekId=(ws.find(x=>liveOf(x.id))||ws[0])?.id||null;
   const w=S.weeks[S.weekId];
-  const head=`<div class="row wrapx"><select id="weekSel" data-change="weekSel" aria-label="เลือก GW">${ws.map(x=>`<option value="${x.id}" ${x.id===S.weekId?'selected':''}>${esc(gwLabel(x))}</option>`).join('')||'<option>ยังไม่มี GW</option>'}</select><button class="btn pri" data-act="newWeek">+ GW ใหม่</button></div>`;
+  const head=`<div class="wkhead"><select id="weekSel" data-change="weekSel" aria-label="เลือก GW">${ws.map(x=>`<option value="${x.id}" ${x.id===S.weekId?'selected':''}>${esc(gwLabel(x))}${x.closed?' · ปิดแล้ว':''}</option>`).join('')||'<option>ยังไม่มี GW</option>'}</select><button class="btn" data-act="newWeek">+ GW ใหม่</button></div>`;
   if(!w)return head+`<div class="card empty">ยังไม่มีวันเตะ กด "+ GW ใหม่" เพื่อเริ่ม</div>`;
-  const ms=matchesOf(w.id),played=ms.some(m=>m.played||m.live),locked=isLocked(w);
-  const att=new Set(w.attendees||[]),rs=roster();
-  const aC=rs.filter(p=>att.has(p.id)&&posAt(w,p.id)==='ATT').length,dC=rs.filter(p=>att.has(p.id)&&posAt(w,p.id)==='DEF').length;
-  const nT=(w.teams||[]).length,autoN=clamp(Math.floor(att.size/6),2,5);
+  const ms=matchesOf(w.id),att=(w.attendees||[]).filter(P),nT=(w.teams||[]).length,step=weekStep(w);
+  const badT=(w.teams||[]).filter(t=>(t.players||[]).length&&!teamBalance(w,t).ok).length;
+  const done=ms.filter(m=>m.played).length;
+  const st=(k,n,label,sub,warn,ok)=>`<button class="stp" data-act="wstep" data-k="${k}" ${step===k?'aria-current="step"':''}><span class="k ${ok?'ok':''}">ขั้น ${n}${ok&&step!==k?' ✓':''}</span><b>${label}</b><span class="s ${warn?'warn':''}">${sub}</span></button>`;
+  const stepper=`<div class="stepper">${st('checkin',1,'เช็คชื่อ',`มา ${att.length} คน`,false,att.length>0)}${st('teams',2,'จัดทีม',nT?`${nT} ทีม${badT?` · ${badT} ไม่สมดุล`:''}`:'ยังไม่จัด',badT>0,nT>0&&!badT)}${st('play',3,'แข่ง',ms.length?`${done}/${ms.length} แมตช์`:'ยังไม่มีโปรแกรม',false,ms.length&&done===ms.length)}</div>`;
+  const body=step==='checkin'?stepCheckin(w):step==='teams'?stepTeams(w):stepPlay(w);
+  return head+stepper+body;
+}
+/* step 1: check-in */
+function attRows(w){
+  const att=new Set(w.attendees||[]),q=(S.attQ||'').trim().toLowerCase(),f=S.attF||'todo';
+  const linger=S.attLinger||new Set();
+  const list=roster().filter(p=>(!q||nm(p.id).toLowerCase().includes(q)||(p.name||'').toLowerCase().includes(q))&&(f==='all'||(f==='in'?att.has(p.id):!att.has(p.id)||linger.has(p.id))));
+  if(!list.length)return `<div class="empty small">${q?'ไม่พบชื่อนี้':f==='todo'?'เช็คครบทุกคนแล้ว':'ยังไม่มีใครเช็คชื่อ'}</div>`;
+  return list.map(p=>`<button class="ck" data-act="att" data-pid="${p.id}" aria-pressed="${att.has(p.id)}">${avatar(p.id,'m')}<span class="nmx">${esc(nm(p.id))}</span>${posTagW(w,p.id,false)}<span class="box">${TICK}</span></button>`).join('');
+}
+function stepCheckin(w){
+  const att=new Set((w.attendees||[]).filter(P)),rs=roster(),f=S.attF||'todo';
+  const aC=rs.filter(p=>att.has(p.id)&&posAt(w,p.id)==='ATT').length,dC=rs.filter(p=>att.has(p.id)&&posAt(w,p.id)!=='ATT').length;
+  const todo=rs.filter(p=>!att.has(p.id)).length;
+  const prev=weeksDesc().find(x=>x.date<w.date&&(x.attendees||[]).length);
+  const canPrev=prev&&prev.attendees.some(id=>P(id)&&!att.has(id));
+  return `<section class="stepsec"><div class="sec-h"><h2 class="sh">เช็คชื่อคนมาเตะ</h2><span class="adm">แอดมิน</span></div>
+   <div class="row" style="gap:8px"><label class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.5" y2="16.5"></line></svg><input type="search" id="attQ" placeholder="ค้นหาชื่อ" aria-label="ค้นหาชื่อ" value="${esc(S.attQ||'')}" autocomplete="off"></label>
+    ${canPrev?`<button class="btn outline" data-act="attPrev" data-w="${prev.id}">ดึงจาก GW ก่อน</button>`:''}</div>
+   <div class="segf" role="group" aria-label="กรองรายชื่อ"><button data-act="attF" data-v="todo" aria-pressed="${f==='todo'}">ยังไม่เช็ค · ${todo}</button><button data-act="attF" data-v="in" aria-pressed="${f==='in'}">มาแล้ว · ${att.size}</button><button data-act="attF" data-v="all" aria-pressed="${f==='all'}">ทั้งหมด</button></div>
+   ${rs.length?`<div class="rows" id="attList">${attRows(w)}</div>`:`<div class="card empty small">ยังไม่มีนักเตะ ไปเพิ่มที่แท็บนักเตะก่อน</div>`}
+   <button class="btn ghost" data-act="newPlayer" style="justify-self:start">+ เพิ่มนักเตะใหม่</button>
+   ${w.closed?'':(lsGet('f7_admin')?'':'<p class="small muted" style="margin:0">ทุกคนดูได้ · การติ๊กชื่อจะถามรหัสผู้ดูแลครั้งแรก</p>')}</section>
+   <div class="bbar"><div class="grow"><div class="bnum">มา ${att.size} คน</div><div class="small muted">บุก ${aC} · รับ ${dC}</div></div><button class="btn pri bbtn" data-act="wstep" data-k="teams">ถัดไป: จัดทีม →</button></div>`;
+}
+/* step 2: teams */
+function stepTeams(w){
+  const ms=matchesOf(w.id),played=ms.some(m=>m.played||m.live),att=(w.attendees||[]).filter(P);
+  const nT=(w.teams||[]).length,autoN=clamp(Math.floor(att.length/6),2,5);
   const assigned=new Set((w.teams||[]).flatMap(t=>t.players||[]));
-  const unassigned=[...att].filter(id=>!assigned.has(id)&&P(id));
-  const isAdm=!!lsGet('f7_admin');
-  const checkin=`<section class="card"><div class="sec-h"><div><div class="eyebrow">เฉพาะแอดมิน</div><h2>เช็คชื่อคนมาเตะ</h2></div><span class="small muted tn">มา ${att.size} คน · บุก ${aC} · รับ ${dC}</span></div>
-   ${isAdm?'':'<p class="small muted" style="margin:0">กดชื่อแล้วระบบจะถามรหัสผู้ดูแลครั้งแรก</p>'}
-   ${rs.length?`<div class="chips">${rs.map(p=>`<button class="chip" data-act="att" data-pid="${p.id}" aria-pressed="${att.has(p.id)}">${avatar(p.id,'s')}${posTag(p)} ${esc(nm(p.id))}</button>`).join('')}</div>`:`<div class="small muted">ยังไม่มีนักเตะ ไปเพิ่มที่แท็บนักเตะก่อน</div>`}
-   <div class="row"><button class="btn sm ghost" data-act="newPlayer">+ เพิ่มนักเตะใหม่</button></div></section>`;
-  const teams=`<section class="card"><div class="sec-h"><h2>จัดทีม</h2>
-    <div class="row"><select id="nTeams" aria-label="จำนวนทีม">${[2,3,4,5].map(n=>`<option value="${n}" ${n===(nT||autoN)?'selected':''}>${n} ทีม</option>`).join('')}</select><button class="btn" data-act="gen" ${played?'disabled':''}>จัดอัตโนมัติ</button><button class="btn" data-act="manual" ${played?'disabled':''}>จัดเอง</button></div></div>
-    <p class="small muted" style="margin:0">จัดอัตโนมัติ: เรียงตามฟอร์มแล้วแจกตัวบุกกับตัวรับให้แต่ละทีมใกล้เคียงกัน · จัดเอง: สร้างทีมว่าง แล้วกดสีทีมข้างชื่อคนเพื่อใส่ทีม ${played?'<br><b>เริ่มเตะแล้ว จึงเริ่มจัดใหม่ทั้งหมดไม่ได้ แต่ยังย้ายคน แก้ชื่อ แก้สีได้</b>':''}</p>
-    ${unassigned.length&&nT?`<div class="pool"><div class="small"><b>ยังไม่มีทีม ${unassigned.length} คน</b> <span class="muted">กดทีมที่จะใส่</span></div>
-      ${unassigned.map(id=>`<div class="pool-row"><span class="who">${avatar(id,'s')}${posTag(P(id))} ${esc(nm(id))}</span><span class="row wrapx" style="gap:4px">${w.teams.map((t,j)=>`<button class="tbtn" data-act="assign" data-pid="${id}" data-t="${j}">${bibEl(w,j)}${esc(t.name)}</button>`).join('')}</span></div>`).join('')}</div>`:''}
-    ${(()=>{const bad=(w.teams||[]).map((t,i)=>({t,i,b:teamBalance(w,t)})).filter(x=>x.t.players?.length&&!x.b.ok);
-      return bad.length?`<div class="balwarn"><b>ตำแหน่งบุก/รับยังไม่สมดุล:</b> ${bad.map(x=>`${esc(x.t.name)} (บุก ${x.b.a} · รับ ${x.b.d})`).join(', ')}<br>แต่ละทีมควรมีบุกกับรับต่างกันไม่เกิน 1 คน ${posLocked(w)?'ย้ายคนข้ามทีมเพื่อปรับ':'ย้ายคนข้ามทีม หรือกดป้าย บุก/รับ ที่ชื่อนักเตะเพื่อสลับตำแหน่งเฉพาะ GW นี้'}</div>`:''})()}
-    ${nT?`<div class="teams">${w.teams.map((t,i)=>teamCard(w,t,i)).join('')}</div>`:''}
-    ${nT&&!posLocked(w)?'<p class="small muted" style="margin:0">กดป้าย บุก/รับ หน้าชื่อเพื่อสลับตำแหน่งเฉพาะ GW นี้ (มี * = ต่างจากตำแหน่งปกติ) แก้ได้จนกว่าจะล็อก</p>':''}
-    ${nT&&nT<8?`<div class="row"><button class="btn sm" data-act="addTeam">+ เพิ่มทีม</button></div>`:''}
-  </section>`;
-  const perTeam=nT?w.teams.map((t,i)=>`${esc(t.name)} ${ms.filter(m=>m.a===i||m.b===i).length}`).join(' · '):'';
-  const fixtures=`<section class="card"><div class="sec-h"><h2>โปรแกรมและผล</h2>${ms.length?`<button class="btn sm" data-act="exportFx" data-w="${w.id}">Export ตาราง</button>`:''}${ms.some(counts)?`<button class="btn sm" data-act="gwSummary" data-w="${w.id}">สรุป GW</button><button class="btn sm" data-act="exportStats" data-w="${w.id}">สถิตินักเตะ</button>`:''}${nT>=2?`<button class="btn sm" data-act="addMatch">+ เพิ่มแมตช์</button>`:''}</div>
-   ${nT>=2?`<div class="row wrapx small"><label for="nMatch">จำนวนแมตช์ทั้งหมด</label><input type="number" id="nMatch" min="1" max="40" value="${w.nMatches||ms.length||rrCount(nT)}" style="width:72px"><button class="btn sm" data-act="refix">จัดโปรแกรมอัตโนมัติ</button><span class="muted">พบกันหมด ${nT} ทีม = ${rrCount(nT)} แมตช์ · แต่ละทีมพักไม่เกิน ${Math.max(1,Math.ceil((nT-1)/2))} แมตช์ติด</span></div>`:''}
-   ${perTeam?`<div class="small muted">จำนวนนัดของแต่ละทีม: ${perTeam}</div>`:''}
-   <div class="row wrapx small"><span class="grow muted">${w.unlocked&&weekStarted(w)?'<b style="color:var(--warn)">แอดมินเปิดให้แก้ทีม Fantasy ชั่วคราว</b> (เตะไปแล้ว แต้มที่ได้ไปแล้วนับให้ทีมใหม่ด้วย)':locked?'ทีม Fantasy ล็อกแล้ว':'ทีม Fantasy ยังเปิดให้เลือก จะล็อกเองเมื่อเริ่มแมตช์แรก'}</span>
-     ${w.closed?'':!played?`<button class="btn sm" data-act="lock">${w.locked?'ปลดล็อกการเลือกทีม':'ล็อกการเลือกทีมเลย'} <span class="muted small">(แอดมิน)</span></button>`
-       :`<button class="btn sm" data-act="unlockFan">${w.unlocked?'ล็อกทีม Fantasy อีกครั้ง':'ปลดล็อกทีม Fantasy'} <span class="muted small">(แอดมิน)</span></button>`}</div>
-   ${ms.length?`<div>${ms.map((m,k)=>fixture(w,m,k+1)).join('')}</div>`:`<div class="empty small">ยังไม่มีแมตช์ จัดทีมแล้วระบบจะจัดโปรแกรมให้ หรือกด + เพิ่มแมตช์</div>`}</section>`;
+  const unassigned=att.filter(id=>!assigned.has(id)&&!P(id).managerOnly);
+  const closed=S.closedTeams||new Set();
+  const card=(t,i)=>{const pl=(t.players||[]).filter(P),b=teamBalance(w,t),open=!closed.has(w.id+':'+i);
+    const ord=[...pl.filter(id=>posAt(w,id)==='ATT'),...pl.filter(id=>posAt(w,id)!=='ATT')];
+    return `<div class="tcard" data-open="${open?1:0}"><button class="tcard-h" data-act="tgTeam" data-t="${i}" aria-expanded="${open}">${bibEl(w,i)}<span class="tnm">${esc(t.name)}</span><span class="small muted tn">${pl.length} คน</span>
+      ${pl.length?`<span class="pill ${b.ok?'ok':'warn'}">บุก ${b.a} · รับ ${b.d}</span>`:''}${CHEV}</button>
+      ${open?`<div class="tcard-b">${pl.length&&!b.ok?`<div class="small" style="color:var(--warn)">ไม่สมดุล ควรเป็น ${Math.ceil(pl.length/2)}/${Math.floor(pl.length/2)} · กดชื่อเพื่อย้ายทีมหรือสลับตำแหน่ง</div>`:''}
+       <div class="chips">${ord.map(id=>`<button class="pchipx" data-act="pSheet" data-pid="${id}">${avatar(id,'s')}${esc(nm(id))}${posTagW(w,id,false)}</button>`).join('')||'<span class="small muted">ยังไม่มีคน</span>'}
+       ${(t.loans||[]).map((n,k)=>`<span class="pchipx loan">ยืม · ${esc(n)}<button class="xbtn sm" data-act="rmLoan" data-t="${i}" data-k="${k}" aria-label="ลบ ${esc(n)}">×</button></span>`).join('')}</div>
+       <div class="row wrapx" style="gap:8px"><button class="btn" data-act="addLoan" data-t="${i}">+ ยืมตัว</button><button class="btn" data-act="editTeam" data-t="${i}">แก้ชื่อ/สี</button></div></div>`:''}</div>`};
+  return `<section class="stepsec"><div class="sec-h"><h2 class="sh">จัดทีม</h2><span class="small muted">มา ${att.length} คน</span></div>
+   <div class="row" style="gap:8px"><select id="nTeams" class="bigsel" aria-label="จำนวนทีม">${[2,3,4,5].map(n=>`<option value="${n}" ${n===(nT||autoN)?'selected':''}>${n} ทีม</option>`).join('')}</select>
+    <button class="btn pri grow mid" data-act="gen" ${played?'disabled':''}>จัดอัตโนมัติ</button><button class="btn mid" data-act="manual" ${played?'disabled':''}>จัดเอง</button></div>
+   <p class="small muted" style="margin:0">${played?'เริ่มเตะแล้ว จัดใหม่ทั้งหมดไม่ได้ แต่ยังกดชื่อเพื่อย้ายคนได้':'อัตโนมัติ: แบ่งบุก/รับให้แต่ละทีมเท่ากันและฟอร์มใกล้กัน · กดชื่อคนเพื่อย้ายทีม สลับตำแหน่ง หรือเอาออก'}</p>
+   ${unassigned.length&&nT?`<div class="pool"><b class="small">ยังไม่มีทีม ${unassigned.length} คน · กดชื่อเพื่อใส่ทีม</b><div class="chips">${unassigned.map(id=>`<button class="pchipx" data-act="pSheet" data-pid="${id}">${avatar(id,'s')}${esc(nm(id))}${posTagW(w,id,false)}</button>`).join('')}</div></div>`:''}
+   ${nT?w.teams.map(card).join(''):`<div class="card empty small">ยังไม่ได้จัดทีม เลือกจำนวนทีมแล้วกดจัดอัตโนมัติ</div>`}
+   ${nT&&nT<8&&!w.closed?`<button class="btn" data-act="addTeam" style="justify-self:start">+ เพิ่มทีม</button>`:''}</section>
+   <div class="bbar"><div class="grow"><div class="bnum">${nT} ทีม</div><div class="small muted">${ms.length} แมตช์${unassigned.length&&nT?` · ยังไม่มีทีม ${unassigned.length}`:''}</div></div><button class="btn pri bbtn" data-act="wstep" data-k="play">ถัดไป: แข่ง →</button></div>`;
+}
+/* step 3: play */
+function mStatus(m){
+  if(m.live)return ['LIVE','live'];
+  if(!m.played)return null;
+  return isDisputed(m)?['มีคนค้าน','warn']:['นับแล้ว','ok'];
+}
+function stepPlay(w){
+  const ms=matchesOf(w.id),nT=(w.teams||[]).length,nx=ms.find(m=>!m.played&&!m.live),locked=isLocked(w);
+  const rows=ms.map((m,k)=>{const [a,b]=score(m),s=mStatus(m)||(m===nx?['ถัดไป','next']:['รอเตะ','wait']);
+    return `<button class="mrow ${m.live?'live':m===nx?'next':''}" data-act="mSheet" data-m="${m.id}"><span class="no">${k+1}</span>
+     <span class="mt">${bibEl(w,m.a)}<span class="n">${esc(teamName(w,m.a))}</span><span class="msc ${m.played||m.live?'':'muted'}">${m.played||m.live?`${a}–${b}`:'vs'}</span><span class="n">${esc(teamName(w,m.b))}</span>${bibEl(w,m.b)}</span>
+     <span class="stchip ${s[1]}">${s[0]}${(m.events||[]).some(needsName)?' ·✎':''}</span></button>`}).join('');
   const pts=calc().byWeek[w.id]||{};
   const tops=Object.entries(pts).filter(([id])=>P(id)).sort((a,b)=>b[1].pts-a[1].pts);
   const ptsCard=tops.length?`<section class="card"><h2>แต้มนักเตะ GW นี้ ${liveOf(w.id)?'<span class="livedot"></span>':''}</h2><div class="tbl-wrap"><table><thead><tr><th>นักเตะ</th><th class="r">แมตช์</th><th class="r">ยิง</th><th class="r">แอส</th><th class="r">คลีนชีต</th><th class="r">เสีย</th><th class="r">แต้ม</th></tr></thead><tbody>
     ${tops.map(([id,s])=>`<tr class="clickable" data-act="profile" data-pid="${id}"><td>${playingNow(w,id)?'<span class="livedot"></span> ':''}${posTag(P(id))} ${esc(nm(id))}</td><td class="r tn">${s.mp}</td><td class="r tn">${s.g}</td><td class="r tn">${s.a}</td><td class="r tn">${s.cs}</td><td class="r tn">${s.con}</td><td class="r num">${fmt(s.pts)}</td></tr>`).join('')}</tbody></table></div></section>`:'';
-  return head+(ms.length?heroCard(w,ms)+fixtures+ptsCard+checkin+teams:checkin+teams+fixtures);
+  return `${ms.length?heroCard(w,ms):''}
+   <section class="stepsec"><div class="sec-h"><h2 class="sh">โปรแกรม <span class="muted num" style="font-size:15px">${ms.filter(m=>m.played).length}/${ms.length}</span></h2><button class="btn mid" data-act="manage">จัดการ ⋯</button></div>
+   <div class="small muted">${w.closed?'ปิด GW แล้ว · แต้มล็อกถาวร':w.unlocked&&weekStarted(w)?'<b style="color:var(--warn)">แอดมินเปิดให้แก้ทีม Fantasy ชั่วคราว</b>':locked?'ทีม Fantasy ล็อกแล้ว':'ทีม Fantasy ยังเลือกได้ · ล็อกเองเมื่อเริ่มแมตช์แรก'}</div>
+   ${ms.length?`<div class="rows">${rows}</div>`:`<div class="card empty small">${nT>=2?'ยังไม่มีแมตช์ กด "จัดการ" เพื่อจัดโปรแกรม':'จัดทีมก่อน แล้วระบบจะจัดโปรแกรมให้'}</div>`}</section>
+   ${ptsCard}`;
 }
-function teamCard(w,t,i){
-  const pl=(t.players||[]).filter(P);
-  const pw=pl.reduce((a,id)=>a+priceInfo(id,w.date).price,0);
-  const edit=!posLocked(w)&&!w.closed,bal=teamBalance(w,t);
-  const line=(id)=>`<div class="tp">${avatar(id,'s')}${posTagW(w,id,edit)}<span class="grow">${esc(nm(id))}</span><select data-change="move" data-pid="${id}" data-from="${i}" aria-label="ย้าย ${esc(nm(id))}"><option value="">ย้าย…</option>${w.teams.map((x,j)=>j===i?'':`<option value="${j}">${esc(x.name)}</option>`).join('')}<option value="-1">เอาออก</option></select></div>`;
-  return `<div class="team"><div class="team-h">${bibEl(w,i)}<span class="grow">${esc(t.name)}</span><span class="small muted tn" title="ผลรวมราคานักเตะ">พลัง ${pw} · ${pl.length} คน</span><button class="btn ghost" data-act="editTeam" data-t="${i}">แก้</button></div>
-   ${pl.length&&!bal.ok?`<div class="teamwarn" style="margin-top:8px">บุก ${bal.a} · รับ ${bal.d} ไม่สมดุล ควรเป็น ${Math.ceil(pl.length/2)}/${Math.floor(pl.length/2)}</div>`:''}
-   <div class="team-b">${pl.filter(id=>posAt(w,id)==='ATT').map(line).join('')}${pl.filter(id=>posAt(w,id)!=='ATT').map(line).join('')}
-   ${(t.loans||[]).map((n,k)=>`<div class="tp loan"><span class="pos" style="background:var(--sunk);color:var(--muted)">ยืม</span><span class="grow">${esc(n)}</span><button class="btn sm ghost" data-act="rmLoan" data-t="${i}" data-k="${k}" aria-label="ลบ">×</button></div>`).join('')}
-   <div class="row" style="margin-top:6px"><button class="btn sm ghost" data-act="addLoan" data-t="${i}">+ ยืมตัว (ไม่นับแต้ม)</button></div></div></div>`;
+
+/* ---------- bottom sheets (player / match / manage) ---------- */
+function renderSheet(){
+  const root=$('#sheetRoot');if(!root)return;
+  const sh=S.sheet;let html='';
+  if(sh){const w=S.weeks[S.weekId];
+    html=!w||S.tab!=='week'?'':sh.k==='player'?sheetPlayer(w,sh.pid):sh.k==='match'?sheetMatch(w,sh.mid):sh.k==='manage'?sheetManage(w):'';
+    if(!html)S.sheet=null;}
+  const full=html?`<div class="sscrim" data-act="sheetScrim"><div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>${html}</div></div>`:'';
+  if(root.dataset.h===full)return;
+  const sc=root.querySelector('.sheet')?.scrollTop||0;
+  root.innerHTML=full;root.dataset.h=full;
+  const n=root.querySelector('.sheet');if(n)n.scrollTop=sc;
+  document.body.style.overflow=full?'hidden':'';
 }
-function loanBtn(m){const n=(m.events||[]).filter(hasLoanEv).length;if(!n)return '';const miss=(m.events||[]).filter(needsName).length;
-  return `<div class="fx-ev"><button class="btn sm ghost" data-act="evNames" data-m="${m.id}">${miss?`ใส่ชื่อคนยืมตัว (${miss})`:'แก้ชื่อคนยืมตัว'}</button></div>`}
-function fixture(w,m,no){
-  const [a,b]=score(m),disp=isDisputed(m);
+function openSheet(o){S.sheet=o;renderSheet()}
+function closeSheet(){S.sheet=null;renderSheet()}
+const shHead=(title,extra)=>`<div class="sh-h"><h3>${title}</h3>${extra||''}<button class="xbtn" data-act="sheetClose" aria-label="ปิด">×</button></div>`;
+function sheetPlayer(w,pid){
+  const p=P(pid);if(!p)return '';
+  const ti=teamIdxOf(w,pid),cur=posAt(w,pid),locked=posLocked(w)||w.closed;
+  const balIf=(t,swap)=>{const pl=(t.players||[]).filter(P);let a=0,d=0;for(const id of pl){const ps=id===pid&&swap?(cur==='ATT'?'DEF':'ATT'):posAt(w,id);ps==='ATT'?a++:d++}return {a,d}};
+  const other=cur==='ATT'?'DEF':'ATT';
+  const after=ti>=0?balIf(w.teams[ti],true):null;
+  return `${shHead(`<span class="row" style="gap:10px">${avatar(pid,'m')}<span>${esc(nm(pid))}</span></span>`)}
+   <div class="small muted">${ti>=0?`อยู่${esc(teamName(w,ti))}`:'ยังไม่มีทีม'} · ตำแหน่ง GW นี้ ${posTagW(w,pid,false)}</div>
+   <span class="lbl">${ti>=0?'ย้ายไปทีม':'ใส่ทีม'}</span>
+   <div class="g2">${(w.teams||[]).map((t,j)=>{const b=teamBalance(w,t);return `<button class="tile tl" data-act="psMove" data-pid="${pid}" data-t="${j}" ${j===ti?'disabled aria-current="true"':''}>${bibEl(w,j)}<span class="grow"><b>${esc(t.name)}</b><span class="small muted">${(t.players||[]).filter(P).length} คน · บุก ${b.a} รับ ${b.d}</span></span>${j===ti?'<span class="small">อยู่ทีมนี้</span>':''}</button>`}).join('')}</div>
+   <span class="lbl">สลับตำแหน่งเฉพาะ GW นี้</span>
+   ${locked?`<div class="small muted">GW นี้ล็อกแล้ว เปลี่ยนตำแหน่งไม่ได้</div>`:`<button class="gi group" data-act="psPos" data-pid="${pid}"><span class="grow">เปลี่ยนเป็นตัว${POS_TH[other]}<span class="sub">${after?`${esc(teamName(w,ti))} จะเป็น บุก ${after.a} · รับ ${after.d}${Math.abs(after.a-after.d)<=1?' ✓ สมดุล':' (ไม่สมดุล)'}`:'มีผลเฉพาะ GW นี้'}</span></span><span class="pos ${other}">${POS_TH[other]}</span></button>`}
+   ${ti>=0?`<button class="btn danger bigbtn" data-act="psMove" data-pid="${pid}" data-t="-1">เอาออกจากทีม</button>`:''}`;
+}
+function sheetMatch(w,mid){
+  const m=S.matches[mid];if(!m||m.weekId!==w.id)return '';
+  const ms=matchesOf(w.id),no=ms.indexOf(m)+1,[a,b]=score(m),disp=isDisputed(m);
+  const s=mStatus(m)||['ยังไม่เตะ','wait'];
   const votes=Object.entries(m.votes||{}).filter(([,x])=>x&&x.v);
   const up=votes.filter(([,x])=>x.v===1).length,dn=votes.filter(([,x])=>x.v===-1);
   const my=S.me&&m.votes?.[S.me]?.v;
-  if(w.closed){const [a2,b2]=score(m);const evs2=(m.events||[]).map(evText);
-    return `<div class="fx">${no?`<div class="no">แมตช์ที่ ${no}</div>`:''}<div class="tA">${esc(teamName(w,m.a))}${bibEl(w,m.a)}</div><div class="sc">${m.played?`${a2} – ${b2}`:'–'}</div><div class="tB">${bibEl(w,m.b)}${esc(teamName(w,m.b))}</div>${evs2.length?`<div class="fx-ev">${evs2.join(' · ')}</div>`:''}${loanBtn(m)}</div>`}
-  const pill=m.live?'<span class="livepill">LIVE</span>':!m.played?'<span class="pill wait">ยังไม่เตะ</span>':disp?'<span class="pill bad">มีคนค้าน · ยังไม่นับแต้ม</span>':'<span class="pill ok">นับแต้มแล้ว</span>';
-  const gkTxt=m.played&&m.gk?['a','b'].map(sd=>m.gk[sd]&&m.gk[sd]!=='loan'?`โกล${esc(teamName(w,sd==='a'?m.a:m.b))}: ${esc(nm(m.gk[sd]))} (ไม่นับแต้ม)`:'').filter(Boolean):[];
-  const evs=(m.events||[]).map(evText);
-  return `<div class="fx ${m.live?'is-live':''}">${no?`<div class="no">แมตช์ที่ ${no}</div>`:''}<div class="tA">${esc(teamName(w,m.a))}${bibEl(w,m.a)}</div>
-   <div class="sc ${m.played||m.live?'':'pending'}">${m.played||m.live?`${a} – ${b}`:'vs'}</div>
-   <div class="tB">${bibEl(w,m.b)}${esc(teamName(w,m.b))}</div>
-   ${evs.length?`<div class="fx-ev">${evs.join(' · ')}</div>`:''}${m.live?'':loanBtn(m)}
-   ${gkTxt.length?`<div class="fx-ev">${gkTxt.join(' · ')}</div>`:''}
-   ${dn.length?`<div class="why">${dn.map(([pid,x])=>`<b>${esc(nm(pid))}</b> ค้าน: ${esc(x.why||'ไม่ได้ให้เหตุผล')}`).join('<br>')}</div>`:''}
-   <div class="fx-meta">${pill}
-    ${m.played?`<span class="small muted">บันทึกโดย ${esc(m.by?nm(m.by):'ไม่ระบุ')}</span>
-      <button class="btn sm" data-act="vote" data-m="${m.id}" data-v="1" aria-pressed="${my===1}" ${my===1?'style="border-color:var(--turf);color:var(--good)"':''}>ผลถูก ${up||''}</button>
-      <button class="btn sm" data-act="vote" data-m="${m.id}" data-v="-1" ${my===-1?'style="border-color:var(--bad);color:var(--bad)"':''}>ค้าน ${dn.length||''}</button>`:''}
-    ${m.live?'':m.played?`<button class="btn sm" data-act="record" data-m="${m.id}">${disp?'แก้ผล':'แก้'}</button>`:`<button class="btn sm pri" data-act="liveStart" data-m="${m.id}">เริ่ม</button><button class="btn sm ghost" data-act="record" data-m="${m.id}">กรอกผล</button>`}</div></div>`;
+  const gkTxt=['a','b'].map(sd=>{const g=m.gk?.[sd];const tn=esc(teamName(w,sd==='a'?m.a:m.b));return g?`${tn} ${g==='loan'?'ยืมตัว':esc(nm(g))+' (ไม่นับแต้ม)'}`:''}).filter(Boolean).join(' · ');
+  const evs=m.events||[];
+  return `${shHead(`แมตช์ที่ ${no} · GW${gwNo(w)}`,`<span class="stchip ${s[1]}">${s[0]==='นับแล้ว'?'นับแต้มแล้ว':s[0]}</span>`)}
+   <div class="bigboard boardbox"><div class="t">${bibEl(w,m.a)}<span>${esc(teamName(w,m.a))}</span></div><div class="s tn" ${m.played||m.live?'style="color:var(--score)"':''}>${m.played||m.live?`${a}–${b}`:'<span class="vs">VS</span>'}</div><div class="t">${bibEl(w,m.b)}<span>${esc(teamName(w,m.b))}</span></div></div>
+   ${evs.length?`<div class="evbox">${evs.map((e,i)=>evLine(w,m,e,i,false)).join('')}</div>`:m.played?'<div class="small muted">ไม่มีประตู</div>':''}
+   ${m.played||m.live?`<div class="small muted">${gkTxt?'โกล: '+gkTxt+' · ':''}บันทึกโดย ${esc(m.by?nm(m.by):'ไม่ระบุ')}</div>`:''}
+   ${dn.length?`<div class="why" style="grid-column:auto">${dn.map(([pid,x])=>`<b>${esc(nm(pid))}</b> ค้าน: ${esc(x.why||'ไม่ได้ให้เหตุผล')}`).join('<br>')}</div>`:''}
+   ${m.played&&!w.closed?`<span style="font-size:17px;font-weight:700">ผลนี้ถูกไหม?</span>
+    <div class="g2"><button class="vbtn up" data-act="vote" data-m="${m.id}" data-v="1" aria-pressed="${my===1}">✓ ผลถูก${up?' · '+up:''}</button><button class="vbtn dn" data-act="vote" data-m="${m.id}" data-v="-1" aria-pressed="${my===-1}">✕ ค้าน${dn.length?' · '+dn.length:''}</button></div>
+    <div class="small muted">${my===1?'คุณกด "ผลถูก" แล้ว · กดซ้ำเพื่อยกเลิก':my===-1?'คุณค้านผลนี้ · กดซ้ำเพื่อยกเลิก':disp?'มีคนค้าน แมตช์นี้ยังไม่นับแต้มจนกว่าจะแก้ผล':'ถ้าไม่มีใครค้าน แต้มนับทันที'}</div>`:''}
+   ${w.closed?'':m.live?`<button class="btn pri bigbtn" data-act="goLive">ไปหน้าบันทึกสด</button>`
+     :m.played?`<button class="btn bigbtn" data-act="record" data-m="${m.id}">แก้ผลแมตช์</button>`
+     :`<div class="g2"><button class="btn pri bigbtn" data-act="liveStart" data-m="${m.id}">เริ่มแมตช์</button><button class="btn bigbtn" data-act="record" data-m="${m.id}">กรอกผลทีเดียว</button></div>`}`;
+}
+function sheetManage(w){
+  const ms=matchesOf(w.id),nT=(w.teams||[]).length,started=weekStarted(w);
+  const cnt=S.nm&&S.nm.w===w.id?S.nm.v:(w.nMatches||ms.length||rrCount(nT));
+  const per=nT?w.teams.map((t,i)=>`${esc(t.name)} ${ms.filter(m=>m.a===i||m.b===i).length}`).join(' · '):'';
+  const fanOn=w.closed||(started?!w.unlocked:!!w.locked);
+  return `${shHead(`จัดการ GW${gwNo(w)}`,'<span class="adm">แอดมิน</span>')}
+   ${nT>=2&&!w.closed?`<span class="lbl">โปรแกรมแข่ง</span><div class="group">
+     <div class="gi"><span class="grow">จำนวนแมตช์ทั้งหมด<span class="sub">พบกันหมด ${nT} ทีม = ${rrCount(nT)}</span></span><button class="stepbtn" data-act="nmStep" data-d="-1" aria-label="ลด">−</button><span class="num" style="width:40px;text-align:center;font-size:22px">${cnt}</span><button class="stepbtn" data-act="nmStep" data-d="1" aria-label="เพิ่ม">+</button></div>
+     <button class="gi" data-act="refix"><span class="grow">จัดโปรแกรมใหม่อัตโนมัติ<span class="sub">แมตช์ที่เตะแล้วไม่หาย · พักไม่เกิน ${Math.max(1,Math.ceil((nT-1)/2))} นัดติด</span></span></button>
+     <button class="gi" data-act="addMatch"><span class="grow">+ เพิ่มแมตช์เอง</span></button></div>
+     ${per?`<div class="small muted">นัดของแต่ละทีม: ${per}</div>`:''}`:''}
+   ${w.closed?'':`<span class="lbl">ทีม Fantasy</span><button class="gi group" data-act="${started?'unlockFan':'lock'}"><span class="grow">ล็อกการเลือกทีม<span class="sub">${started?(w.unlocked?'เปิดให้แก้ชั่วคราว · แต้มที่ได้ไปแล้วนับให้ทีมใหม่ด้วย':'ล็อกแล้วเพราะเริ่มเตะ · ปิดสวิตช์เพื่อเปิดให้แก้ชั่วคราว'):(w.locked?'ล็อกแล้ว':'ล็อกเองเมื่อเริ่มแมตช์แรก')}</span></span><span class="switch ${fanOn?'on':''}" aria-hidden="true"></span></button>`}
+   ${ms.length?`<span class="lbl">แชร์ลง LINE</span><div class="g3"><button class="tile" data-act="exportFx" data-w="${w.id}">ตารางแข่ง</button><button class="tile" data-act="gwSummary" data-w="${w.id}" ${ms.some(counts)?'':'disabled'}>สรุป GW</button><button class="tile" data-act="exportStats" data-w="${w.id}" ${ms.some(counts)?'':'disabled'}>สถิตินักเตะ</button></div>`:''}
+   ${w.closed?`<button class="btn bigbtn" data-act="closeGw" data-w="${w.id}" data-v="0">เปิด GW อีกครั้ง</button>`:ms.some(m=>m.played)?`<button class="btn danger bigbtn" data-act="closeGw" data-w="${w.id}" data-v="1">ปิด GW · ล็อกแต้มถาวร</button>`:''}`;
 }
 
 /* ----- fantasy team ----- */
@@ -1088,7 +1367,7 @@ let MH={};
 function modal(html,handlers){MH=handlers||{};$('#modalRoot').innerHTML=`<div class="scrim" data-act="scrim"><div class="modal" role="dialog" aria-modal="true">${html}</div></div>`}
 function closeModal(){$('#modalRoot').innerHTML='';MH={};R=null}
 let tT;function toast(msg,err){clearTimeout(tT);$('#toastRoot').innerHTML=`<div class="toast ${err?'err':''}" role="status">${esc(msg)}</div>`;tT=setTimeout(()=>$('#toastRoot').innerHTML='',2600)}
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#modalRoot').innerHTML)closeModal()});
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if($('#modalRoot').innerHTML)closeModal();else if(S.sheet)closeSheet()});
 
 /* ---------- record match ---------- */
 let R=null;
@@ -1250,12 +1529,9 @@ const ACT={
   pfPos:el=>{S.pf.pos=el.dataset.v;render()},pfMode:el=>{S.pf.mode=el.dataset.v;render()},
   exportFx:el=>openSchedule(el.dataset.w),
   exportStats:el=>openPlayerStats(el.dataset.w),
-  evName:el=>{const m=S.matches[el.dataset.m],i=+el.dataset.i;editLoanNames(m,m.events[i],async ev=>{const evs=clone(S.matches[m.id].events);evs[i]=ev;await save(()=>store.merge('matches',m.id,{events:evs}),'บันทึกชื่อแล้ว')})},
-  evNames:el=>{const m=S.matches[el.dataset.m],w=S.weeks[m.weekId];const list=(m.events||[]).map((e,i)=>({e,i})).filter(x=>hasLoanEv(x.e));
-    modal(`<h3>ชื่อคนยืมตัว · ${esc(teamName(w,m.a))} vs ${esc(teamName(w,m.b))}</h3><p class="small muted" style="margin:0">เก็บเป็นสถิติ ไม่นับแต้ม Fantasy · แก้ได้แม้ปิด GW แล้ว</p>
-      ${list.map(({e,i})=>`<div class="ev">${bibEl(w,e.side==='a'?m.a:m.b)}<span class="grow">${evText(e)}</span><button class="btn sm ${needsName(e)?'pri':''}" data-act="enOne" data-i="${i}">${needsName(e)?'ใส่ชื่อ':'แก้'}</button></div>`).join('')}
-      <div><button class="btn ghost" data-act="close">ปิด</button></div>`,{
-      enOne:b=>{const i=+b.dataset.i;editLoanNames(m,S.matches[m.id].events[i],async ev=>{const evs=clone(S.matches[m.id].events);evs[i]=ev;await save(()=>store.merge('matches',m.id,{events:evs}),'บันทึกชื่อแล้ว');setTimeout(()=>ACT.evNames(el),300)},()=>ACT.evNames(el))}})},
+  evName:el=>{const m=S.matches[el.dataset.m];if(!m)return;const ref=el.dataset.e?{eid:el.dataset.e}:{i:+el.dataset.i};
+    const e=ref.eid?(m.events||[]).find(x=>x.eid===ref.eid):m.events[ref.i];if(!e)return;
+    editLoanNames(m,e,async ev=>{await save(()=>store.op(m.id,'evNames',{...ref,sLoan:ev.sLoan||null,aLoan:ev.aLoan||null}),'บันทึกชื่อแล้ว')})},
   gwPos:async el=>{const w=S.weeks[S.weekId],id=el.dataset.pid;if(posLocked(w)||w.closed){toast('GW นี้ล็อกแล้ว เปลี่ยนตำแหน่งไม่ได้',true);return}
     const nxt=posAt(w,id)==='ATT'?'DEF':'ATT';await save(()=>store.merge('weeks',w.id,{pos:{[id]:nxt}}),nm(id)+' เป็นตัว'+POS_TH[nxt]+'ใน GW นี้')},
   closeGw:el=>{const wid=el.dataset.w,on=el.dataset.v==='1';withAdmin(()=>save(()=>store.merge('weeks',wid,on?{closed:true,unlocked:false,cfg:Object.fromEntries(Object.keys(DEF_CFG).map(k=>[k,S.config[k]]))}:{closed:false}),on?'ปิด GW แล้ว แต้มล็อกถาวร':'เปิด GW อีกครั้งแล้ว'))},
@@ -1280,20 +1556,24 @@ const ACT={
        const attendees=[...new Set(teams.flatMap(t=>t.players))];
        await save(async()=>{await store.set('weeks',d,{date:d,attendees,teams,locked:false,...(src.nMatches?{nMatches:src.nMatches}:{})});await rebuildFixtures(d,teams.length,src.nMatches&&src.teams.length===teams.length?src.nMatches:rrCount(teams.length))},'สร้าง GW แล้ว ใช้ทีมเดิมจาก '+gwLabel(src))}})},
   att:el=>{const id=el.dataset.pid;withAdmin(()=>{const w=S.weeks[S.weekId],s2=new Set(w.attendees||[]);s2.has(id)?s2.delete(id):s2.add(id);
+    if(s2.has(id)){const L=S.attLinger||(S.attLinger=new Set());L.add(id);setTimeout(()=>{L.delete(id);if(S.tab==='week'){const l=$('#attList'),ww=S.weeks[S.weekId];if(l&&ww)l.innerHTML=attRows(ww)}},2200)}
     let teams=w.teams||[];if(!s2.has(id)&&teams.some(t=>t.players.includes(id))){teams=clone(teams);teams.forEach(t=>t.players=t.players.filter(x=>x!==id))}
     return save(()=>store.merge('weeks',w.id,{attendees:[...s2],teams}))})},
   gen:async()=>{const w=S.weeks[S.weekId];if(matchesOf(w.id).some(m=>m.played||m.live)){toast('มีแมตช์บันทึกผลแล้ว จัดทีมใหม่ไม่ได้',true);return}
     const n=+$('#nTeams').value,ids=(w.attendees||[]).filter(id=>P(id)&&!P(id).managerOnly);
     if(ids.length<n*2){toast('คนมายังน้อยไปสำหรับ '+n+' ทีม',true);return}
     const teams=buildTeams(ids,n,w.date,w.pos);
-    await save(async()=>{await store.merge('weeks',w.id,{teams});await rebuildFixtures(w.id,n,(w.teams||[]).length===n&&parseInt($('#nMatch')?.value)||rrCount(n))},'จัดทีมและโปรแกรมแล้ว')},
+    await save(async()=>{await store.merge('weeks',w.id,{teams});await rebuildFixtures(w.id,n,(w.teams||[]).length===n&&w.nMatches||rrCount(n))},'จัดทีมและโปรแกรมแล้ว')},
   manual:()=>{const w=S.weeks[S.weekId];if(matchesOf(w.id).some(m=>m.played||m.live)){toast('มีแมตช์บันทึกผลแล้ว เริ่มจัดใหม่ไม่ได้',true);return}
     const n=+$('#nTeams').value;const teams=[...Array(n)].map((_,i)=>({name:'ทีม'+BIBS[i%BIBS.length].n,bib:i%BIBS.length,players:[],loans:[]}));
-    save(async()=>{await store.merge('weeks',w.id,{teams});await rebuildFixtures(w.id,n,(w.teams||[]).length===n&&parseInt($('#nMatch')?.value)||rrCount(n))},'สร้าง '+n+' ทีมว่างแล้ว ใส่คนได้เลย')},
+    save(async()=>{await store.merge('weeks',w.id,{teams});await rebuildFixtures(w.id,n,(w.teams||[]).length===n&&w.nMatches||rrCount(n))},'สร้าง '+n+' ทีมว่างแล้ว ใส่คนได้เลย')},
   assign:async el=>{const w=S.weeks[S.weekId],teams=clone(w.teams),pid=el.dataset.pid;teams.forEach(t=>t.players=t.players.filter(x=>x!==pid));teams[+el.dataset.t].players.push(pid);await save(()=>store.merge('weeks',w.id,{teams}))},
   addTeam:async()=>{const w=S.weeks[S.weekId],teams=clone(w.teams),used=new Set(teams.map(t=>t.bib));const b=[...BIBS.keys()].find(i=>!used.has(i))??0;
     teams.push({name:'ทีม'+(used.has(b)?' '+(teams.length+1):BIBS[b].n),bib:b,players:[],loans:[]});await save(()=>store.merge('weeks',w.id,{teams}),'เพิ่มทีมแล้ว')},
-  refix:async()=>{const w=S.weeks[S.weekId];const c=clamp(parseInt($('#nMatch')?.value)||rrCount(w.teams.length),1,40);await save(()=>rebuildFixtures(w.id,w.teams.length,c),'จัดโปรแกรม '+c+' แมตช์แล้ว')},
+  refix:()=>{const w=S.weeks[S.weekId];const c=clamp(S.nm&&S.nm.w===w.id?S.nm.v:(w.nMatches||rrCount(w.teams.length)),1,40);
+    withAdmin(()=>save(()=>rebuildFixtures(w.id,w.teams.length,c),'จัดโปรแกรม '+c+' แมตช์แล้ว'))},
+  nmStep:el=>{const w=S.weeks[S.weekId],ms=matchesOf(w.id);const cur=S.nm&&S.nm.w===w.id?S.nm.v:(w.nMatches||ms.length||rrCount(w.teams.length));
+    S.nm={w:w.id,v:clamp(cur+(+el.dataset.d),Math.max(1,ms.filter(m=>m.played||m.live).length),40)};renderSheet()},
   editTeam:el=>openTeamEdit(+el.dataset.t),
   addLoan:el=>{const i=+el.dataset.t;modal(`<h3>เพิ่มผู้เล่นยืมตัว</h3><p class="small muted" style="margin:0">ยืมตัวไม่ได้แต้ม Fantasy แต่ประตูยังนับในสกอร์</p><div class="field"><label for="lnName">ชื่อ</label><input type="text" id="lnName" placeholder="เช่น โกลยืม, เพื่อนพี่ตูน"></div>
     <div class="row"><button class="btn pri" data-act="lnSave">เพิ่ม</button><button class="btn ghost" data-act="close">ยกเลิก</button></div>`,{
@@ -1309,13 +1589,27 @@ const ACT={
   record:el=>{if(!needMe())return;openRecord(el.dataset.m)},
   liveStart:async el=>{if(!needMe())return;const m=S.matches[el.dataset.m];if(!m)return;const cur=liveOf(m.weekId);
     if(cur&&cur.id!==m.id){toast('จบแมตช์ที่กำลังเตะก่อน',true);return}
-    await save(async()=>{await store.merge('matches',m.id,{live:true,startedAt:Date.now(),by:S.me,events:[],gk:{a:lastGk(m,'a'),b:lastGk(m,'b')},roster:rosterNow(S.weeks[m.weekId],m)});await freezePos(m.weekId)},'เริ่มแมตช์แล้ว');window.scrollTo({top:0,behavior:'smooth'})},
-  liveGoal:el=>{if(!needMe())return;const m=S.matches[el.dataset.m];pickGoal(m,el.dataset.s,async ev=>{const cur=S.matches[m.id];await save(()=>store.merge('matches',m.id,{events:[...(cur.events||[]),ev]}),'ประตู! '+(ev.type==='og'?'เข้าประตูตัวเอง':nm(ev.scorer)))})},
-  liveRm:async el=>{const m=S.matches[el.dataset.m],ev=clone(m.events||[]);ev.splice(+el.dataset.i,1);await save(()=>store.merge('matches',m.id,{events:ev}),'ลบประตูแล้ว')},
-  liveEnd:async el=>{const m=S.matches[el.dataset.m];const [a,b]=score(m);const doc={...strip(clone(m)),roster:m.roster||rosterNow(S.weeks[m.weekId],m),live:false,played:true,at:Date.now(),by:m.by||S.me||null,votes:{}};
-    await save(async()=>{await store.set('matches',m.id,doc);await freezePos(m.weekId)},'จบแมตช์ '+a+'–'+b+' บันทึกแล้ว')},
+    closeSheet();S.wstep={w:m.weekId,k:'play'};
+    const ok=await save(async()=>{await store.op(m.id,'start',{gk:{a:lastGk(m,'a'),b:lastGk(m,'b')},roster:rosterNow(S.weeks[m.weekId],m)});await freezePos(m.weekId)},'เริ่มแมตช์แล้ว · คุณเป็นคนบันทึก');
+    if(ok)window.scrollTo({top:0,behavior:'smooth'})},
+  liveGoal:el=>{if(!needMe())return;const m=S.matches[el.dataset.m];pickGoal(m,el.dataset.s,ev=>{
+    ev.eid=rid('e_');ev.t=Date.now();
+    const go=()=>save(()=>store.op(m.id,'addEvent',{ev}),'ประตู! '+(ev.type==='og'?'เข้าประตูตัวเอง':scorerLbl(ev)));
+    const dup=(S.matches[m.id].events||[]).filter(e=>e.side===ev.side&&e.type===ev.type&&e.scorer===ev.scorer&&ev.t-(e.t||0)<30000).pop();
+    if(!dup){go();return}
+    const sec=Math.max(1,Math.round((ev.t-dup.t)/1000));
+    modal(`<h3>บันทึกซ้ำหรือเปล่า?</h3><p style="margin:0">เพิ่งบันทึกประตู <b>${esc(ev.type==='og'?nm(ev.scorer)+' (เข้าตัวเอง)':scorerLbl(ev))}</b> ไปเมื่อ ${sec} วินาทีก่อน ลูกนี้เป็นอีกลูกใช่ไหม?</p>
+      <div class="g2"><button class="btn bigbtn" data-act="close">ไม่ใช่ ยกเลิก</button><button class="btn pri bigbtn" data-act="dupOk">ใช่ อีกลูก</button></div>`,{dupOk:()=>{closeModal();go()}})})},
+  liveRm:async el=>{if(el.dataset.arm!=='1'){el.dataset.arm='1';el.textContent='ลบ?';el.style.width='auto';el.style.padding='0 12px';el.style.borderRadius='10px';el.style.color='var(--bad)';el.style.borderColor='var(--bad)';setTimeout(()=>{if(el.isConnected&&el.dataset.arm==='1'){el.dataset.arm='';el.textContent='×';el.removeAttribute('style')}},3000);return}
+    const m=S.matches[el.dataset.m];await save(()=>store.op(m.id,'rmEvent',el.dataset.e?{eid:el.dataset.e}:{i:+el.dataset.i}),'ลบประตูแล้ว')},
+  liveEnd:async el=>{const m=S.matches[el.dataset.m];const [a,b]=score(m);
+    await save(async()=>{await store.op(m.id,'endMatch',{roster:m.roster||rosterNow(S.weeks[m.weekId],m)});await freezePos(m.weekId)},'จบแมตช์ '+a+'–'+b+' บันทึกแล้ว')},
   liveCancel:async el=>{if(el.dataset.arm!=='1'){el.dataset.arm='1';el.textContent='กดอีกครั้งเพื่อยกเลิกแมตช์นี้';return}
-    const m=S.matches[el.dataset.m];await save(()=>store.merge('matches',m.id,{live:false,events:[],startedAt:null}),'ยกเลิกแล้ว แมตช์กลับเป็นยังไม่เตะ')},
+    const m=S.matches[el.dataset.m];await save(()=>store.op(m.id,'cancelLive'),'ยกเลิกแล้ว แมตช์กลับเป็นยังไม่เตะ')},
+  claim:el=>{if(!needMe())return;const m=S.matches[el.dataset.m];if(!m)return;
+    modal(`<h3>ขอบันทึกแทน ${esc(nm(m.recorder))}?</h3><p style="margin:0">ใช้เมื่อคนบันทึกแบตหมดหรือออกจากสนาม หลังกด ${esc(nm(m.recorder))} จะกดเพิ่มประตูไม่ได้ และคุณจะเป็นคนบันทึกต่อจากสกอร์ปัจจุบัน</p>
+      <div class="g2"><button class="btn bigbtn" data-act="close">ยกเลิก</button><button class="btn pri bigbtn" data-act="claimOk">บันทึกแทน</button></div>`,{claimOk:async()=>{closeModal();await save(()=>store.op(m.id,'claim'),'ตอนนี้คุณเป็นคนบันทึกแมตช์นี้')}})},
+  goLive:()=>{closeSheet();window.scrollTo({top:0,behavior:'smooth'})},
   vote:async el=>{if(!needMe())return;const mid=el.dataset.m,v=+el.dataset.v,cur=S.matches[mid].votes?.[S.me]?.v;
     if(cur===v){await save(()=>store.merge('matches',mid,{votes:{[S.me]:{v:0,why:''}}}),'ยกเลิกโหวตแล้ว');return}
     if(v===1){await save(()=>store.merge('matches',mid,{votes:{[S.me]:{v:1,why:''}}}),'ยืนยันผลแล้ว');return}
@@ -1335,13 +1629,28 @@ const ACT={
   cfgSave:async()=>{const o={};for(const [k] of CFG_LABELS){const v=parseFloat($('#cfg_'+k).value);o[k]=isFinite(v)?v:DEF_CFG[k]}o.squad=clamp(Math.round(o.squad),1,6);o.maxPerTeam=clamp(Math.round(o.maxPerTeam),1,6);o.formWeeks=clamp(Math.round(o.formWeeks),1,20);
     withAdmin(()=>save(()=>store.set('config','scoring',o),'บันทึกค่าแต้มแล้ว'))},
   cfgReset:()=>{withAdmin(()=>save(()=>store.set('config','scoring',{...DEF_CFG}),'คืนค่าเริ่มต้นแล้ว'))},
+  wstep:el=>{S.wstep={w:S.weekId,k:el.dataset.k};render();window.scrollTo(0,0)},
+  attF:el=>{S.attF=el.dataset.v;S.attLinger=new Set();render()},
+  attPrev:el=>{const src=S.weeks[el.dataset.w];withAdmin(()=>{const w=S.weeks[S.weekId];const s2=new Set(w.attendees||[]);let n=0;for(const id of src.attendees||[])if(P(id)&&!s2.has(id)){s2.add(id);n++}
+    return save(()=>store.merge('weeks',w.id,{attendees:[...s2]}),'ดึงรายชื่อ '+n+' คนจาก '+gwLabel(src))})},
+  tgTeam:el=>{const k=S.weekId+':'+el.dataset.t;const c=S.closedTeams||(S.closedTeams=new Set());c.has(k)?c.delete(k):c.add(k);render()},
+  pSheet:el=>openSheet({k:'player',pid:el.dataset.pid}),
+  mSheet:el=>openSheet({k:'match',mid:el.dataset.m}),
+  manage:()=>{S.nm=null;openSheet({k:'manage'})},
+  sheetClose:()=>closeSheet(),
+  psMove:async el=>{const w=S.weeks[S.weekId],pid=el.dataset.pid,to=+el.dataset.t,teams=clone(w.teams);teams.forEach(t=>t.players=(t.players||[]).filter(x=>x!==pid));if(to>=0)teams[to].players.push(pid);
+    closeSheet();await save(()=>store.merge('weeks',w.id,{teams}),to>=0?nm(pid)+' → '+teams[to].name:'เอา '+nm(pid)+' ออกจากทีมแล้ว')},
+  psPos:async el=>{const w=S.weeks[S.weekId],id=el.dataset.pid;if(posLocked(w)||w.closed){toast('GW นี้ล็อกแล้ว เปลี่ยนตำแหน่งไม่ได้',true);return}
+    const nxt=posAt(w,id)==='ATT'?'DEF':'ATT';await save(()=>store.merge('weeks',w.id,{pos:{[id]:nxt}}),nm(id)+' เป็นตัว'+POS_TH[nxt]+'ใน GW นี้')},
   seedDemo:()=>seedDemo(),
   clearDemo:async()=>{await save(async()=>{for(const k of ['picks','matches','weeks','players'])for(const x of Object.values(S[k]))if(x.demo)await store.del(k,x.id)},'ลบข้อมูลตัวอย่างแล้ว');if(S.me&&!P(S.me)){S.me=null;lsSet('f7_me',null)}render()}
 };
 document.addEventListener('click',e=>{const el=e.target.closest('[data-act]');if(!el)return;const a=el.dataset.act;
   if(a==='scrim'){if(e.target===el)closeModal();return}
+  if(a==='sheetScrim'){if(e.target===el)closeSheet();return}
   const h=MH[a]||ACT[a];if(h){e.preventDefault();h(el,e)}});
-document.addEventListener('input',e=>{if(e.target.id==='pfQ'&&S.pf){S.pf.q=e.target.value;const l=$('#plist');if(l)l.innerHTML=playersListHTML()}});
+document.addEventListener('input',e=>{if(e.target.id==='pfQ'&&S.pf){S.pf.q=e.target.value;const l=$('#plist');if(l)l.innerHTML=playersListHTML()}
+  if(e.target.id==='attQ'){S.attQ=e.target.value;const l=$('#attList'),w=S.weeks[S.weekId];if(l&&w)l.innerHTML=attRows(w)}});
 document.addEventListener('change',async e=>{const el=e.target.closest('[data-change]');if(!el)return;const k=el.dataset.change;
   if(k==='me'&&el.value==='__new'){el.value=S.me||'';openPlayerForm(null,id=>becomeMe(id,true));return}
   if(k==='me'){const v=el.value;el.value=S.me||'';if(!v){forgetMe();return}becomeMe(v);return}
@@ -1350,7 +1659,7 @@ document.addEventListener('change',async e=>{const el=e.target.closest('[data-ch
   if(k==='pfSort'){S.pf.sort=el.value;render();return}
   if(k==='pfWho'){S.pf.who=el.checked?'last':'all';render();return}
   if(k==='standWeek'){S.standWeek=el.value;render();return}
-  if(k==='weekSel'){S.weekId=el.value;render();return}
+  if(k==='weekSel'){S.weekId=el.value;S.sheet=null;S.attQ='';render();return}
   if(k==='teamWeekSel'){S.teamWeekId=el.value;render();return}
   if(k==='move'){if(el.value==='')return;const w=S.weeks[S.weekId],teams=clone(w.teams),pid=el.dataset.pid,from=+el.dataset.from,to=+el.value;
     if(from>=0)teams[from].players=teams[from].players.filter(x=>x!==pid);if(to>=0)teams[to].players.push(pid);
