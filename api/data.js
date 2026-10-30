@@ -118,6 +118,11 @@ export default async function handler(req, res) {
         }
       }
       // locking / unlocking fantasy picks for a GW needs the admin PIN
+      // scoring rules are admin-only
+      if (col === 'config') {
+        const e = adminCheck(req.headers['x-admin']);
+        if (e) return res.status(403).json({ error: e });
+      }
       if (col === 'weeks' && data && 'unlocked' in data) {
         const cur = parse(await redis.hget(key('weeks'), id));
         if (!!data.unlocked !== !!(cur && cur.unlocked)) {

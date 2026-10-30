@@ -784,8 +784,8 @@ function vRules(){
     <li>ล็อก/ปลดล็อกการเลือกทีม Fantasy ต้องใช้รหัสผู้ดูแล (ระบบล็อกเองเมื่อบันทึกผลแมตช์แรก)</li>
     <li>แต่ละคนมีรหัส 4–6 หลักของตัวเอง ทีม Fantasy และโหวตแก้ได้เฉพาะเจ้าของชื่อที่ใส่รหัสแล้ว</li>
     <li>ใครก็บันทึกผลได้ ถ้าไม่มีคนกดค้าน แต้มนับทันที ถ้ามีคนค้าน แมตช์นั้นไม่นับจนกว่าจะมีคนแก้ผล (แก้แล้วโหวตเริ่มใหม่)</li></ul></section>
-  <section class="card"><div class="sec-h"><h2>ปรับค่าแต้ม</h2><button class="btn sm ghost" data-act="cfgReset">คืนค่าเริ่มต้น</button></div>
-   <p class="small muted" style="margin:0">เปลี่ยนแล้วแต้มทุกสัปดาห์คำนวณใหม่ย้อนหลังทั้งหมด ตกลงกันในก๊วนก่อนแก้</p>
+  <section class="card"><div class="sec-h"><h2>ปรับค่าแต้ม <span class="pill warn">เฉพาะแอดมิน</span></h2><button class="btn sm ghost" data-act="cfgReset">คืนค่าเริ่มต้น</button></div>
+   <p class="small muted" style="margin:0">ต้องใช้รหัสผู้ดูแลตอนบันทึก · เปลี่ยนแล้วแต้มของ GW ที่ยังไม่ปิดจะคำนวณใหม่ GW ที่ปิดแล้วไม่เปลี่ยน</p>
    <div class="cfg">${CFG_LABELS.map(([k,l])=>`<div class="field"><label for="cfg_${k}">${l}</label><input type="number" step="0.5" id="cfg_${k}" value="${c[k]}"></div>`).join('')}</div>
    <div class="row"><button class="btn pri" data-act="cfgSave">บันทึกค่าแต้ม</button></div></section>
   <section class="card"><h2>ข้อมูลตัวอย่าง</h2><div class="row wrapx">${hasDemo?`<button class="btn danger" data-act="clearDemo">ลบข้อมูลตัวอย่างทั้งหมด</button>`:`<button class="btn" data-act="seedDemo">ใส่ข้อมูลตัวอย่าง</button>`}<span class="small muted grow">ข้อมูลตัวอย่างถูกติดป้ายไว้ ลบแล้วข้อมูลจริงยังอยู่</span></div></section>`;
@@ -1333,8 +1333,8 @@ const ACT={
     const cost=d.players.reduce((s,id)=>s+priceInfo(id,w.date).price,0);
     await save(()=>store.set('picks',w.id+'_'+S.me,{weekId:w.id,manager:S.me,players:d.players,captain:d.captain,cost,at:Date.now()}),'ส่งทีมแล้ว')},
   cfgSave:async()=>{const o={};for(const [k] of CFG_LABELS){const v=parseFloat($('#cfg_'+k).value);o[k]=isFinite(v)?v:DEF_CFG[k]}o.squad=clamp(Math.round(o.squad),1,6);o.maxPerTeam=clamp(Math.round(o.maxPerTeam),1,6);o.formWeeks=clamp(Math.round(o.formWeeks),1,20);
-    await save(()=>store.set('config','scoring',o),'บันทึกค่าแต้มแล้ว')},
-  cfgReset:async()=>{await save(()=>store.set('config','scoring',{...DEF_CFG}),'คืนค่าเริ่มต้นแล้ว')},
+    withAdmin(()=>save(()=>store.set('config','scoring',o),'บันทึกค่าแต้มแล้ว'))},
+  cfgReset:()=>{withAdmin(()=>save(()=>store.set('config','scoring',{...DEF_CFG}),'คืนค่าเริ่มต้นแล้ว'))},
   seedDemo:()=>seedDemo(),
   clearDemo:async()=>{await save(async()=>{for(const k of ['picks','matches','weeks','players'])for(const x of Object.values(S[k]))if(x.demo)await store.del(k,x.id)},'ลบข้อมูลตัวอย่างแล้ว');if(S.me&&!P(S.me)){S.me=null;lsSet('f7_me',null)}render()}
 };
