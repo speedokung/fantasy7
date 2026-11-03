@@ -1452,27 +1452,49 @@ function backfillPos(){if(!API)return;for(const w of Object.values(S.weeks)){if(
   for(const m of matchesOf(w.id))if(m.played&&!m.roster)store.merge('matches',m.id,{roster:rosterNow(w,m)}).catch(()=>{})}}
 
 /* ---------- team generation ---------- */
-// order matches so every team rests about equally: nobody sits more than ceil((teams-1)/2) games in a row
-// (2 for 4–5 teams), back-to-back games are avoided, and repeat pairings come last
-function planMatches(n,count,history){
-  history=history||[];if(n<2)return [];
+// order matches so every team rests about equally: nobody sits more than ceil((teams-1)/2) games in a row,
+// back-to-back games are shared out evenly instead of always landing on the same teams, and repeat pairings come last.
+// Many randomised drafts are built with the same greedy rules and the fairest one wins, so the order changes week to week.
+function planMatches(n,count,history,rnd){
+  history=history||[];rnd=rnd||Math.random;if(n<2||count<1)return [];
   const maxRest=Math.max(1,Math.ceil((n-1)/2));
-  const wait=Array(n).fill(0),games=Array(n).fill(0),pc={},pk=(a,b)=>a<b?a+'-'+b:b+'-'+a;let last=null;
-  const apply=(a,b)=>{for(let t=0;t<n;t++)wait[t]++;wait[a]=0;wait[b]=0;games[a]++;games[b]++;pc[pk(a,b)]=(pc[pk(a,b)]||0)+1;last=pk(a,b)};
-  for(const [a,b] of history)if(a<n&&b<n)apply(a,b);
+  const pk=(a,b)=>a<b?a+'-'+b:b+'-'+a;
   const pairs=[];for(let i=0;i<n;i++)for(let j=i+1;j<n;j++)pairs.push([i,j]);
-  const out=[];
-  for(let k=0;k<count;k++){
-    const must=[...Array(n).keys()].filter(t=>wait[t]>=maxRest).sort((x,y)=>wait[y]-wait[x]||games[x]-games[y]).slice(0,2);
-    let valid=pairs.filter(p=>must.every(t=>p.includes(t)));if(!valid.length)valid=pairs;
-    let best=null,bs=Infinity;
-    for(const [i,j] of valid){const jp=t=>games[t]>0&&wait[t]===0;
-      const sc=(pc[pk(i,j)]||0)*100+(pk(i,j)===last?1000:0)+(jp(i)?60:0)+(jp(j)?60:0)-(wait[i]+wait[j])*10+(games[i]+games[j])*8;
-      if(sc<bs){bs=sc;best=[i,j]}}
-    const [a,b]=games[best[0]]<=games[best[1]]?best:[best[1],best[0]];
-    out.push([a,b]);apply(a,b);
+  const H=history.filter(([a,b])=>a<n&&b<n);
+  function draft(jit){
+    const wait=Array(n).fill(0),games=Array(n).fill(0),b2b=Array(n).fill(0),pc={};let last=null;
+    const apply=(a,b)=>{for(const t of [a,b])if(games[t]>0&&wait[t]===0)b2b[t]++;
+      for(let t=0;t<n;t++)wait[t]++;wait[a]=0;wait[b]=0;games[a]++;games[b]++;pc[pk(a,b)]=(pc[pk(a,b)]||0)+1;last=pk(a,b)};
+    for(const [a,b] of H)apply(a,b);
+    const out=[];
+    for(let k=0;k<count;k++){
+      const must=[...Array(n).keys()].filter(t=>wait[t]>=maxRest).sort((x,y)=>wait[y]-wait[x]||games[x]-games[y]||rnd()-.5).slice(0,2);
+      let valid=pairs.filter(p=>must.every(t=>p.includes(t)));if(!valid.length)valid=pairs;
+      let best=null,bs=Infinity;
+      for(const [i,j] of valid){const jp=t=>games[t]>0&&wait[t]===0;
+        // back-to-back costs more for a team that has already had more of them
+        const sc=(pc[pk(i,j)]||0)*100+(pk(i,j)===last?1000:0)+(jp(i)?60+b2b[i]*25:0)+(jp(j)?60+b2b[j]*25:0)-(wait[i]+wait[j])*10+(games[i]+games[j])*8+rnd()*jit;
+        if(sc<bs){bs=sc;best=[i,j]}}
+      const [a,b]=games[best[0]]<games[best[1]]||games[best[0]]===games[best[1]]&&rnd()<.5?best:[best[1],best[0]];
+      out.push([a,b]);apply(a,b);
+    }
+    return out;
   }
-  return out;
+  // fairness of a whole schedule (history included): lower is better
+  function cost(sched){
+    const all=[...H,...sched],G=Array(n).fill(0),B=Array(n).fill(0),R=Array(n).fill(0),pc={};
+    const runR=Array(n).fill(0);let c=0;
+    all.forEach(([a,b],k)=>{for(let t=0;t<n;t++){if(t===a||t===b){if(k>0&&(all[k-1][0]===t||all[k-1][1]===t))B[t]++;G[t]++;runR[t]=0}else{runR[t]++;if(G[t]>0||k>=maxRest)R[t]=Math.max(R[t],runR[t])}}
+      pc[pk(a,b)]=(pc[pk(a,b)]||0)+1;if(k>0&&pk(a,b)===pk(...all[k-1]))c+=500});
+    const sp=(x)=>Math.max(...x)-Math.min(...x);
+    const pv=pairs.map(([i,j])=>pc[pk(i,j)]||0);
+    for(const r of R)if(r>maxRest)c+=1000*(r-maxRest);
+    c+=sp(G)*200+sp(pv)*60+sp(B)*40+Math.max(...B)*5+sp(R)*15;
+    return c;
+  }
+  let best=null,bc=Infinity;
+  for(let t=0;t<300;t++){const s=draft(t?40:0),c=cost(s)+rnd()*0.5;if(c<bc){bc=c;best=s}}
+  return best;
 }
 const rrCount=n=>n*(n-1)/2;
 async function rebuildFixtures(wid,n,count){
