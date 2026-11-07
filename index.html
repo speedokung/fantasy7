@@ -377,10 +377,10 @@ h2.sh{font-size:20px;font-family:var(--body);font-weight:700}
 
 <script>
 /* ---------- config & constants ---------- */
-const DEF_CFG={goalATT:3,goalDEF:5,assist:2,ownGoal:-2,win:1,csATT:1,defStart:3,defPerConceded:1,csDEF:2,
+const DEF_CFG={goalATT:2.5,goalDEF:5,assist:2,assistDEF:3,teamGoalATT:0.5,teamGoalCap:0,ownGoal:-2,win:1,csATT:0.5,defStart:1,defPerConceded:1,csDEF:2,
   budget:30,squad:3,maxPerTeam:2,captain:2,priceNew:7,priceBase:5,priceSlope:0.5,priceMin:4,priceMax:15,formWeeks:4};
 const CFG_LABELS=[
- ['goalATT','ประตู (ตัวบุก)'],['goalDEF','ประตู (ตัวรับ)'],['assist','แอสซิสต์'],['ownGoal','ทำเข้าประตูตัวเอง'],
+ ['goalATT','ประตู (ตัวบุก)'],['goalDEF','ประตู (ตัวรับ)'],['assist','แอสซิสต์ (ตัวบุก)'],['assistDEF','แอสซิสต์ (ตัวรับ)'],['teamGoalATT','ตัวบุก: ทีมยิง (ต่อลูกที่ทีมยิง)'],['teamGoalCap','เพดานทีมยิง (ลูก/แมตช์, 0 = ไม่จำกัด)'],['ownGoal','ทำเข้าประตูตัวเอง'],
  ['win','ทีมชนะ (ต่อแมตช์)'],['csATT','คลีนชีต (ตัวบุก)'],['defStart','แต้มตั้งต้นตัวรับ/แมตช์'],['defPerConceded','ตัวรับเสียแต้ม/ประตูที่โดน'],
  ['csDEF','โบนัสคลีนชีต (ตัวรับ)'],['budget','งบต่อสัปดาห์'],['squad','จำนวนนักเตะที่เลือก'],['maxPerTeam','เลือกจากทีมเดียวกันได้ไม่เกิน'],['captain','ตัวคูณกัปตัน'],
  ['priceNew','ราคานักเตะใหม่'],['priceBase','ราคาฐาน'],['priceSlope','ราคาเพิ่ม/แต้มฟอร์ม'],['priceMin','ราคาต่ำสุด'],['priceMax','ราคาสูงสุด'],['formWeeks','ฟอร์มคิดจากกี่สัปดาห์ล่าสุด']];
@@ -545,7 +545,8 @@ function addStat(t,s){for(const k in s)t[k]=(t[k]||0)+s[k]}
 const isDisputed=m=>Object.values(m.votes||{}).some(x=>x&&x.v===-1);
 const counts=m=>(m.played||m.live)&&!isDisputed(m);
 function score(m){let a=0,b=0;for(const e of m.events||[]){if(e.side==='a')a++;else b++}return [a,b]}
-const wcfg=w=>w?.closed&&w.cfg?{...S.config,...w.cfg}:S.config;
+// a GW closed before a rule existed scores as it did then: no team-goal bonus, one assist value for everyone
+const wcfg=w=>w?.closed&&w.cfg?{...S.config,teamGoalATT:0,teamGoalCap:0,assistDEF:w.cfg.assist??S.config.assist,...w.cfg}:S.config;
 const rosterNow=(w,m)=>({a:[...(w.teams?.[m.a]?.players||[])],b:[...(w.teams?.[m.b]?.players||[])]});
 const posTagW=(w,id,editable)=>{const ps=posAt(w,id);const ov=w?.pos?.[id]&&w.pos[id]!==P(id)?.pos;
   return editable?`<button class="pos ${ps}" data-act="gwPos" data-pid="${id}" title="กดเพื่อสลับตำแหน่งเฉพาะ GW นี้">${POS_TH[ps]}${ov?'*':''}</button>`:`<span class="pos ${ps}">${POS_TH[ps]||''}${ov?'*':''}</span>`};
@@ -561,12 +562,12 @@ function matchPoints(m,w,cfg){
       if(gf>ga){st.w=1;st.pts+=cfg.win}
       if(ga===0)st.cs=1;
       if(posAt(w,pid)==='DEF')st.pts+=cfg.defStart-cfg.defPerConceded*ga+(ga===0?cfg.csDEF:0);
-      else if(ga===0)st.pts+=cfg.csATT;
+      else{if(ga===0)st.pts+=cfg.csATT;const tg=cfg.teamGoalATT||0;if(tg)st.pts+=tg*(cfg.teamGoalCap>0?Math.min(gf,cfg.teamGoalCap):gf)}
     }}
   for(const e of m.events||[]){
     if(e.type==='goal'){
       if(e.scorer&&res[e.scorer]){res[e.scorer].g++;res[e.scorer].pts+=posAt(w,e.scorer)==='DEF'?cfg.goalDEF:cfg.goalATT}
-      if(e.assist&&res[e.assist]){res[e.assist].a++;res[e.assist].pts+=cfg.assist}
+      if(e.assist&&res[e.assist]){res[e.assist].a++;res[e.assist].pts+=posAt(w,e.assist)==='DEF'?(cfg.assistDEF??cfg.assist):cfg.assist}
     }else if(e.type==='og'&&e.scorer&&res[e.scorer]){res[e.scorer].og++;res[e.scorer].pts+=cfg.ownGoal}
   }
   return res;
@@ -1046,7 +1047,8 @@ function vRules(){
   return `<section class="card"><h2>วิธีคิดแต้ม (ต่อแมตช์)</h2>
    <div class="tbl-wrap"><table><thead><tr><th>เหตุการณ์</th><th class="r">ตัวบุก</th><th class="r">ตัวรับ</th></tr></thead><tbody>
     <tr><td>ยิงประตู</td><td class="r num">${sgn(c.goalATT)}</td><td class="r num">${sgn(c.goalDEF)}</td></tr>
-    <tr><td>แอสซิสต์</td><td class="r num">${sgn(c.assist)}</td><td class="r num">${sgn(c.assist)}</td></tr>
+    <tr><td>แอสซิสต์</td><td class="r num">${sgn(c.assist)}</td><td class="r num">${sgn(c.assistDEF??c.assist)}</td></tr>
+    ${c.teamGoalATT?`<tr><td>ทีมยิง (ต่อลูกที่ทีมตัวเองยิง)${c.teamGoalCap>0?` · นับสูงสุด ${fmt(c.teamGoalCap)} ลูก/แมตช์`:''}</td><td class="r num">${sgn(c.teamGoalATT)}</td><td class="r muted">–</td></tr>`:''}
     <tr><td>ทีมชนะ</td><td class="r num">${sgn(c.win)}</td><td class="r num">${sgn(c.win)}</td></tr>
     <tr><td>คลีนชีต</td><td class="r num">${sgn(c.csATT)}</td><td class="r muted">ดูตารางล่าง</td></tr>
     <tr><td>ทำเข้าประตูตัวเอง</td><td class="r num">${sgn(c.ownGoal)}</td><td class="r num">${sgn(c.ownGoal)}</td></tr></tbody></table></div>
