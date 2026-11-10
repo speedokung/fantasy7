@@ -1319,10 +1319,13 @@ async function drawPlayerStats(w,season){
   const out=document.createElement('canvas');out.width=W;out.height=y;out.getContext('2d').drawImage(cv,0,0);return out;
 }
 function openSchedule(wid){const w=S.weeks[wid];if(!w||!matchesOf(wid).length){toast('GW นี้ยังไม่มีโปรแกรม',true);return}
-  const any=matchesOf(wid).some(m=>m.played||m.live);
-  showImage(()=>drawSchedule(w),`7s-GW${gwNo(w)}-${any?'results':'fixtures'}-${w.date}.png`,(any?'ผลการแข่ง':'โปรแกรมแข่ง')+' GW'+gwNo(w),'')}
-async function drawSchedule(w){
-  const K={bg:'#0E1813',card:'#16241C',line:'#24372B',ink:'#EAF2EC',muted:'#93A69A',turf:'#3DB27A',gold:'#F2C14E',att:'#F07B55',def:'#7196F2',bad:'#F0736A'};
+  const any=matchesOf(wid).some(m=>m.played||m.live),light=lsGet('f7_schedTheme')==='light';
+  const tog=`<div class="seg" role="group" aria-label="สีพื้นหลัง"><button data-act="schedTheme" data-w="${wid}" data-v="dark" aria-pressed="${!light}">พื้นเข้ม</button><button data-act="schedTheme" data-w="${wid}" data-v="light" aria-pressed="${light}">พื้นขาว</button></div>`;
+  showImage(()=>drawSchedule(w,light),`7s-GW${gwNo(w)}-${any?'results':'fixtures'}${light?'-light':''}-${w.date}.png`,(any?'ผลการแข่ง':'โปรแกรมแข่ง')+' GW'+gwNo(w),tog)}
+async function drawSchedule(w,light){
+  const K=light
+    ?{bg:'#FFFFFF',card:'#F1F5F2',line:'#DCE4DE',ink:'#13201A',muted:'#5E6F65',turf:'#1F8F5A',gold:'#A87400',att:'#C4532E',def:'#3A5FC4',bad:'#D04A42',live:'#FCE8E6',attBg:'#FBE5DD',defBg:'#E2E9FA',bibLine:'rgba(0,0,0,.25)'}
+    :{bg:'#0E1813',card:'#16241C',line:'#24372B',ink:'#EAF2EC',muted:'#93A69A',turf:'#3DB27A',gold:'#F2C14E',att:'#F07B55',def:'#7196F2',bad:'#F0736A',live:'#3A1B19',attBg:'#45261C',defBg:'#1E2E52',bibLine:'rgba(255,255,255,.35)'};
   const FD='"Chakra Petch","Anuphan",sans-serif',FB='"Anuphan","Noto Sans Thai",sans-serif';
   try{await Promise.all(['700 40px "Chakra Petch"','600 40px "Chakra Petch"','700 30px Anuphan','500 30px Anuphan','600 30px Anuphan'].map(f=>document.fonts.load(f,'กขAa0')))}catch{}
   const ms=matchesOf(w.id),teams=w.teams||[],any=ms.some(m=>m.played||m.live),done=ms.length&&ms.every(m=>m.played);
@@ -1330,7 +1333,7 @@ async function drawSchedule(w){
   g.fillStyle=K.bg;g.fillRect(0,0,W,cv.height);
   const rr=(x,y,w2,h,r,fill)=>{g.beginPath();g.roundRect(x,y,w2,h,r);g.fillStyle=fill;g.fill()};
   const txt=(t,x,y,{font=`500 28px ${FB}`,color=K.ink,align='left',max}={})=>{g.font=font;g.fillStyle=color;g.textAlign='left';let s2=String(t);if(max){while(g.measureText(s2).width>max&&s2.length>1)s2=s2.slice(0,-2)+'…'}const wd=g.measureText(s2).width;g.fillText(s2,align==='right'?x-wd:align==='center'?x-wd/2:x,y);return wd};
-  const bib=(x,y,c,wd=22,h=30)=>{g.fillStyle=c;g.beginPath();g.roundRect(x,y,wd,h,4);g.fill();g.strokeStyle='rgba(255,255,255,.35)';g.lineWidth=1.5;g.stroke()};
+  const bib=(x,y,c,wd=22,h=30)=>{g.fillStyle=c;g.beginPath();g.roundRect(x,y,wd,h,4);g.fill();g.strokeStyle=K.bibLine;g.lineWidth=1.5;g.stroke()};
   const section=(title,y)=>{txt(title,PAD,y,{font:`700 34px ${FD}`});g.fillStyle=K.turf;g.fillRect(PAD,y+14,56,5);return y+50};
   g.fillStyle=K.turf;g.fillRect(0,0,W,10);let y=96;
   txt('7s FANTASY',PAD,y-22,{font:`700 30px ${FD}`,color:K.turf});
@@ -1344,7 +1347,7 @@ async function drawSchedule(w){
   for(const [k,m] of ms.entries()){const [a,b]=score(m);const evs=(m.events||[]);
     const sa=evs.filter(e=>e.side==='a'),sb=evs.filter(e=>e.side==='b');const lbl=e=>e.type==='og'?nm(e.scorer)+' (OG)':scorerLbl(e);
     const lines=m.played||m.live?Math.max(sa.length,sb.length):0;const h=92+lines*30;
-    rr(PAD,y,W-PAD*2,h,16,m.live?'#3A1B19':K.card);
+    rr(PAD,y,W-PAD*2,h,16,m.live?K.live:K.card);
     txt(k+1,PAD+30,y+56,{font:`700 26px ${FD}`,color:K.muted,align:'center'});
     txt(teamName(w,m.a),W/2-110,y+56,{font:`700 30px ${FB}`,align:'right',max:300});bib(W/2-98,y+32,bibOf(w,m.a).c);
     bib(W/2+76,y+32,bibOf(w,m.b).c);txt(teamName(w,m.b),W/2+110,y+56,{font:`700 30px ${FB}`,max:300});
@@ -1360,7 +1363,7 @@ async function drawSchedule(w){
     for(let r=0;r<teams.length;r+=cols){const row=teams.slice(r,r+cols);const rowH=Math.max(...row.map(t=>((t.players||[]).filter(P).length+(t.loans||[]).length)*36))+80;
       row.forEach((t,ci)=>{const i=r+ci,x=PAD+ci*(cw+20);rr(x,y,cw,rowH,16,K.card);bib(x+22,y+22,bibOf(w,i).c,24,32);txt(t.name,x+60,y+48,{font:`700 30px ${FB}`,max:cw-80});
         let ly=y+92;const pl=(t.players||[]).filter(P).sort((p1,p2)=>(posAt(w,p1)==='ATT'?0:1)-(posAt(w,p2)==='ATT'?0:1));
-        for(const id of pl){const ps=posAt(w,id);g.font=`700 18px ${FB}`;rr(x+22,ly-21,44,28,6,ps==='DEF'?'#1E2E52':'#45261C');txt(POS_TH[ps],x+44,ly-1,{font:`700 18px ${FB}`,color:ps==='DEF'?K.def:K.att,align:'center'});txt(nm(id),x+78,ly,{font:`600 25px ${FB}`,max:cw-100});ly+=36}
+        for(const id of pl){const ps=posAt(w,id);g.font=`700 18px ${FB}`;rr(x+22,ly-21,44,28,6,ps==='DEF'?K.defBg:K.attBg);txt(POS_TH[ps],x+44,ly-1,{font:`700 18px ${FB}`,color:ps==='DEF'?K.def:K.att,align:'center'});txt(nm(id),x+78,ly,{font:`600 25px ${FB}`,max:cw-100});ly+=36}
         for(const n of t.loans||[]){txt('ยืม',x+44,ly-1,{font:`600 18px ${FB}`,color:K.muted,align:'center'});txt(n,x+78,ly,{font:`500 25px ${FB}`,color:K.muted,max:cw-100});ly+=36}});
       y+=rowH+16}}
   y+=20;g.fillStyle=K.line;g.fillRect(PAD,y,W-PAD*2,2);y+=40;
@@ -1557,6 +1560,7 @@ const ACT={
   pfPos:el=>{S.pf.pos=el.dataset.v;render()},pfMode:el=>{S.pf.mode=el.dataset.v;render()},
   exportFx:el=>openSchedule(el.dataset.w),
   exportStats:el=>openPlayerStats(el.dataset.w),
+  schedTheme:el=>{lsSet('f7_schedTheme',el.dataset.v);openSchedule(el.dataset.w)},
   exportSeason:()=>openSeasonStats(),
   evName:el=>{const m=S.matches[el.dataset.m];if(!m)return;const ref=el.dataset.e?{eid:el.dataset.e}:{i:+el.dataset.i};
     const e=ref.eid?(m.events||[]).find(x=>x.eid===ref.eid):m.events[ref.i];if(!e)return;
