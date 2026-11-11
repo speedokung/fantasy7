@@ -245,6 +245,19 @@ td.r,th.r{text-align:right}
 .cfg{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
 .cfg input{width:100%}
 .pitch-line{height:2px;background:repeating-linear-gradient(90deg,var(--turf) 0 10px,transparent 10px 16px);opacity:.5;border-radius:2px}
+.ko{font-size:13px;line-height:1;flex:none}
+.kotag{font-size:12px;font-weight:600;color:var(--muted);display:inline-flex;align-items:center;gap:4px}
+.feeform{display:grid;gap:10px}
+.fld{display:grid;gap:4px;font-size:14px;font-weight:600}
+.fld input{min-height:48px;font-size:16px;border-radius:12px}
+.feesum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.feesum div{background:var(--sunk);border-radius:12px;padding:10px 12px;display:grid;gap:2px}
+.feesum b{font-size:22px}.feesum span{font-size:12px;color:var(--muted)}
+.feerow .num{font-size:18px}
+.feerow[aria-pressed="true"] .box{background:var(--turf);border-color:var(--turf)}
+.feerow[aria-pressed="true"] .box svg{opacity:1}
+.feerow:disabled{opacity:.7;cursor:default}
+.feecard .bigbtn{min-height:52px}
 /* match page: steps, big touch targets */
 :root{--score:#9A6A00}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--score:#F2C14E}}
@@ -378,11 +391,11 @@ h2.sh{font-size:20px;font-family:var(--body);font-weight:700}
 <script>
 /* ---------- config & constants ---------- */
 const DEF_CFG={goalATT:2.5,goalDEF:5,assist:2,assistDEF:3,teamGoalATT:0.5,teamGoalCap:0,ownGoal:-2,win:1,csATT:0.5,defStart:1,defPerConceded:1,csDEF:2,
-  budget:30,squad:3,maxPerTeam:2,captain:2,priceNew:7,priceBase:5,priceSlope:0.5,priceMin:4,priceMax:15,formWeeks:4};
+  feeR1:100,feeR2:0,feeR3:0,feeSeason:0,feeAbsent:0,budget:30,squad:3,maxPerTeam:2,captain:2,priceNew:7,priceBase:5,priceSlope:0.5,priceMin:4,priceMax:15,formWeeks:4};
 const CFG_LABELS=[
  ['goalATT','ประตู (ตัวบุก)'],['goalDEF','ประตู (ตัวรับ)'],['assist','แอสซิสต์ (ตัวบุก)'],['assistDEF','แอสซิสต์ (ตัวรับ)'],['teamGoalATT','ตัวบุก: ทีมยิง (ต่อลูกที่ทีมยิง)'],['teamGoalCap','เพดานทีมยิง (ลูก/แมตช์, 0 = ไม่จำกัด)'],['ownGoal','ทำเข้าประตูตัวเอง'],
  ['win','ทีมชนะ (ต่อแมตช์)'],['csATT','คลีนชีต (ตัวบุก)'],['defStart','แต้มตั้งต้นตัวรับ/แมตช์'],['defPerConceded','ตัวรับเสียแต้ม/ประตูที่โดน'],
- ['csDEF','โบนัสคลีนชีต (ตัวรับ)'],['budget','งบต่อสัปดาห์'],['squad','จำนวนนักเตะที่เลือก'],['maxPerTeam','เลือกจากทีมเดียวกันได้ไม่เกิน'],['captain','ตัวคูณกัปตัน'],
+ ['csDEF','โบนัสคลีนชีต (ตัวรับ)'],['feeR1','ค่าสนาม: ส่วนลด % อันดับ 1 Fantasy'],['feeR2','ค่าสนาม: ส่วนลด % อันดับ 2'],['feeR3','ค่าสนาม: ส่วนลด % อันดับ 3'],['feeSeason','ค่าสนาม: นับอันดับจาก (0 = GW นั้น, 1 = รวมซีซั่น)'],['feeAbsent','ค่าสนาม: คนเล่น Fantasy ที่ไม่ได้มาเตะช่วยหารด้วย (1 = ใช่, 0 = ไม่)'],['budget','งบต่อสัปดาห์'],['squad','จำนวนนักเตะที่เลือก'],['maxPerTeam','เลือกจากทีมเดียวกันได้ไม่เกิน'],['captain','ตัวคูณกัปตัน'],
  ['priceNew','ราคานักเตะใหม่'],['priceBase','ราคาฐาน'],['priceSlope','ราคาเพิ่ม/แต้มฟอร์ม'],['priceMin','ราคาต่ำสุด'],['priceMax','ราคาสูงสุด'],['formWeeks','ฟอร์มคิดจากกี่สัปดาห์ล่าสุด']];
 const BIBS=[{n:'ส้ม',c:'#EE7A2E'},{n:'น้ำเงิน',c:'#2F5BD3'},{n:'ขาว',c:'#F4F4F0'},{n:'ดำ',c:'#26292A'},{n:'เหลือง',c:'#EBC11B'}];
 const POS_TH={ATT:'บุก',DEF:'รับ'};
@@ -733,7 +746,7 @@ function heroCard(w,ms){
     const gkSel=sd=>{const ti=sd==='a'?lm.a:lm.b;return `<label class="gksel">${bibEl(w,ti)}<span>โกล</span><select data-change="liveGk" data-m="${lm.id}" data-s="${sd}"><option value="loan" ${(lm.gk?.[sd]||'loan')==='loan'?'selected':''}>ยืมตัว / คนนอก</option>${(w.teams?.[ti]?.players||[]).filter(P).map(id=>`<option value="${id}" ${lm.gk?.[sd]===id?'selected':''}>${esc(nm(id))}</option>`).join('')}</select></label>`};
     const gkTxt=['a','b'].map(sd=>{const g=lm.gk?.[sd];return g&&g!=='loan'?`โกล${esc(teamName(w,sd==='a'?lm.a:lm.b))}: ${esc(nm(g))}`:''}).filter(Boolean).join(' · ');
     return `<section class="card hero live"><div class="sec-h"><span class="livepill">LIVE</span><span class="small muted">แมตช์ที่ ${no(lm)}/${total}</span></div>
-     <div class="bigboard"><div class="t">${bibEl(w,lm.a)}<span>${esc(teamName(w,lm.a))}</span></div><div class="s tn">${a} – ${b}</div><div class="t">${bibEl(w,lm.b)}<span>${esc(teamName(w,lm.b))}</span></div></div>
+     <div class="bigboard"><div class="t">${bibEl(w,lm.a)}<span>${esc(teamName(w,lm.a))}</span>${kickoffs(w)[lm.id]==='a'?`<span class="kotag">${KO} เขี่ยก่อน</span>`:''}</div><div class="s tn">${a} – ${b}</div><div class="t">${bibEl(w,lm.b)}<span>${esc(teamName(w,lm.b))}</span>${kickoffs(w)[lm.id]==='b'?`<span class="kotag">${KO} เขี่ยก่อน</span>`:''}</div></div>
      ${mine?`<div class="goalbtns"><button class="goalbtn" data-act="liveGoal" data-m="${lm.id}" data-s="a" style="border-color:${bibOf(w,lm.a).c}">+ ประตู ${esc(teamName(w,lm.a))}</button><button class="goalbtn" data-act="liveGoal" data-m="${lm.id}" data-s="b" style="border-color:${bibOf(w,lm.b).c}">+ ประตู ${esc(teamName(w,lm.b))}</button></div>`
        :`<div class="recby"><span class="livedot"></span><span class="grow"><b>${esc(nm(recOf(lm)))}</b> กำลังบันทึกแมตช์นี้<br><span class="small muted">สกอร์อัปเดตเองทุกไม่กี่วินาที</span></span><button class="btn" data-act="claim" data-m="${lm.id}">ขอบันทึกแทน</button></div>`}
      <div class="evbox">${evs.map((e,i)=>evLine(w,lm,e,i,mine)).join('')||'<div class="small muted" style="padding:12px 14px">ยังไม่มีประตู</div>'}</div>
@@ -743,7 +756,7 @@ function heroCard(w,ms){
      :gkTxt?`<div class="small muted">${gkTxt} (ไม่นับแต้ม)</div>`:''}</section>`}
   if(nx){const rest=(()=>{let best=null;for(const ti of [nx.a,nx.b]){let k=0;for(let j=ms.indexOf(nx)-1;j>=0&&ms[j].a!==ti&&ms[j].b!==ti;j--)k++;if(ms.slice(0,ms.indexOf(nx)).some(m=>m.a===ti||m.b===ti)&&k>=2&&(!best||k>best.k))best={ti,k}}return best})();
     return `<section class="card hero"><div class="sec-h"><div class="eyebrow">แมตช์ถัดไป · ${no(nx)}/${total}</div>${rest?`<span class="small muted">${esc(teamName(w,rest.ti))}พักมา ${rest.k} นัด</span>`:''}</div>
-     <div class="bigboard"><div class="t">${bibEl(w,nx.a)}<span>${esc(teamName(w,nx.a))}</span></div><div class="vs">VS</div><div class="t">${bibEl(w,nx.b)}<span>${esc(teamName(w,nx.b))}</span></div></div>
+     <div class="bigboard"><div class="t">${bibEl(w,nx.a)}<span>${esc(teamName(w,nx.a))}</span>${kickoffs(w)[nx.id]==='a'?`<span class="kotag">${KO} เขี่ยก่อน</span>`:''}</div><div class="vs">VS</div><div class="t">${bibEl(w,nx.b)}<span>${esc(teamName(w,nx.b))}</span>${kickoffs(w)[nx.id]==='b'?`<span class="kotag">${KO} เขี่ยก่อน</span>`:''}</div></div>
      <button class="btn pri bigbtn play" data-act="liveStart" data-m="${nx.id}"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4v16l13-8z"></path></svg>เริ่มแมตช์ · บันทึกสด</button>
      <button class="btn ghost mid" data-act="record" data-m="${nx.id}">กรอกผลทีเดียว</button></section>`}
   if(total)return `<section class="card hero"><div class="sec-h"><h2>เตะครบ ${total} แมตช์แล้ว</h2><button class="btn" data-act="tab" data-k="home">ตารางคะแนน</button></div>
@@ -825,9 +838,10 @@ function mStatus(m){
 }
 function stepPlay(w){
   const ms=matchesOf(w.id),nT=(w.teams||[]).length,nx=ms.find(m=>!m.played&&!m.live),locked=isLocked(w);
+  const ko=kickoffs(w);
   const rows=ms.map((m,k)=>{const [a,b]=score(m),s=mStatus(m)||(m===nx?['ถัดไป','next']:['รอเตะ','wait']);
     return `<button class="mrow ${m.live?'live':m===nx?'next':''}" data-act="mSheet" data-m="${m.id}"><span class="no">${k+1}</span>
-     <span class="mt">${bibEl(w,m.a)}<span class="n">${esc(teamName(w,m.a))}</span><span class="msc ${m.played||m.live?'':'muted'}">${m.played||m.live?`${a}–${b}`:'vs'}</span><span class="n">${esc(teamName(w,m.b))}</span>${bibEl(w,m.b)}</span>
+     <span class="mt">${bibEl(w,m.a)}${ko[m.id]==='a'?KO:''}<span class="n">${esc(teamName(w,m.a))}</span><span class="msc ${m.played||m.live?'':'muted'}">${m.played||m.live?`${a}–${b}`:'vs'}</span><span class="n">${esc(teamName(w,m.b))}</span>${ko[m.id]==='b'?KO:''}${bibEl(w,m.b)}</span>
      <span class="stchip ${s[1]}">${s[0]}${(m.events||[]).some(needsName)?' ·✎':''}</span></button>`}).join('');
   const pts=calc().byWeek[w.id]||{};
   const tops=Object.entries(pts).filter(([id])=>P(id)).sort((a,b)=>b[1].pts-a[1].pts);
@@ -836,8 +850,115 @@ function stepPlay(w){
   return `${ms.length?heroCard(w,ms):''}
    <section class="stepsec"><div class="sec-h"><h2 class="sh">โปรแกรม <span class="muted num" style="font-size:15px">${ms.filter(m=>m.played).length}/${ms.length}</span></h2><button class="btn mid" data-act="manage">จัดการ ⋯</button></div>
    <div class="small muted">${w.closed?'ปิด GW แล้ว · แต้มล็อกถาวร':w.unlocked&&weekStarted(w)?'<b style="color:var(--warn)">แอดมินเปิดให้แก้ทีม Fantasy ชั่วคราว</b>':locked?'ทีม Fantasy ล็อกแล้ว':'ทีม Fantasy ยังเลือกได้ · ล็อกเองเมื่อเริ่มแมตช์แรก'}</div>
-   ${ms.length?`<div class="rows">${rows}</div>`:`<div class="card empty small">${nT>=2?'ยังไม่มีแมตช์ กด "จัดการ" เพื่อจัดโปรแกรม':'จัดทีมก่อน แล้วระบบจะจัดโปรแกรมให้'}</div>`}</section>
+   ${ms.length?`<div class="rows">${rows}</div><div class="small muted">${KO} = ทีมที่เขี่ยบอลก่อน (แบ่งให้แต่ละทีมได้เท่าๆ กัน)</div>`:`<div class="card empty small">${nT>=2?'ยังไม่มีแมตช์ กด "จัดการ" เพื่อจัดโปรแกรม':'จัดทีมก่อน แล้วระบบจะจัดโปรแกรมให้'}</div>`}</section>
+   ${(w.attendees||[]).length?feeCard(w):''}
    ${ptsCard}`;
+}
+
+/* ----- kick-off: share it evenly between teams ----- */
+// in fixture order, the team that has kicked off fewer times gets the ball; on a tie, the one that kicked off longer ago.
+// an admin can flip a single match (m.ko) and the rest of the GW rebalances around it.
+function kickoffs(w){const ms=matchesOf(w.id),cnt={},last={},out={};
+  ms.forEach((m,k)=>{let s=m.ko==='a'||m.ko==='b'?m.ko:null;
+    if(!s){const ca=cnt[m.a]||0,cb=cnt[m.b]||0;s=ca<cb?'a':cb<ca?'b':null;
+      if(!s){const la=last[m.a]??-1,lb=last[m.b]??-1;s=la<lb?'a':lb<la?'b':(k%2?'b':'a')}}
+    out[m.id]=s;const t=s==='a'?m.a:m.b;cnt[t]=(cnt[t]||0)+1;last[t]=k});
+  return out}
+const KO='<span class="ko" title="เขี่ยบอลก่อน" aria-label="เขี่ยบอลก่อน">⚽</span>';
+
+/* ----- field fee split ----- */
+// everyone who came pays an equal share; fantasy players ranked 1–3 (by this GW or the season so far) get the
+// discount set in the rules, and only the other fantasy players cover what they don't pay.
+function fantasyRanks(w,cfg){
+  const mine=Object.values(S.picks).filter(k=>k.weekId===w.id&&!k.demo&&P(k.manager));
+  const players=new Set(mine.map(k=>k.manager));
+  let score={};
+  if(cfg.feeSeason){for(const k of Object.values(S.picks)){const wk=S.weeks[k.weekId];if(k.demo||!wk||!isLocked(wk)||wk.date>w.date)continue;score[k.manager]=(score[k.manager]||0)+pickPts(k)}}
+  else for(const k of mine)score[k.manager]=pickPts(k);
+  const list=Object.entries(score).filter(([id])=>players.has(id)).sort((a,b)=>b[1]-a[1]);
+  const rank={};list.forEach(([id,v],i)=>{rank[id]=i&&list[i-1][1]===v?rank[list[i-1][0]]:i+1});
+  return {players,rank,score}}
+function feeSplit(w){
+  const fee=w.fee||{},total=+fee.total||0,cfg=wcfg(w);
+  const came=(w.attendees||[]).filter(id=>P(id)&&!P(id).managerOnly);
+  if(!total||!came.length)return null;
+  const {players,rank,score}=fantasyRanks(w,cfg),cameS=new Set(came);
+  const disc=id=>{const r=rank[id];return r&&r<=3?clamp((+cfg['feeR'+r]||0)/100,0,1):0};
+  const base=total/came.length;
+  let waived=0;for(const id of came)waived+=base*disc(id);
+  let cover=[...players].filter(id=>!disc(id)&&(cfg.feeAbsent||cameS.has(id)));
+  let spreadAll=false;if(waived>0&&!cover.length){cover=came.filter(id=>!disc(id));spreadAll=true}
+  const extra=waived>0&&cover.length?waived/cover.length:0,coverS=new Set(cover);
+  const ids=[...new Set([...came,...cover])];
+  const rows=ids.map(id=>{const d=cameS.has(id)?disc(id):0,b=cameS.has(id)?base*(1-d):0,x=coverS.has(id)?extra:0;
+    return {id,came:cameS.has(id),fantasy:players.has(id),rank:rank[id]||null,pts:score[id],disc:d,base:b,extra:x,amount:Math.ceil(b+x-1e-9),paid:!!fee.paid?.[id]}})
+    .sort((a,b)=>(b.amount-a.amount)||nm(a.id).localeCompare(nm(b.id),'th'));
+  return {total,base,extra,waived,rows,cfg,spreadAll,collect:rows.reduce((s,r)=>s+r.amount,0),paidN:rows.filter(r=>r.paid&&r.amount>0).length,payN:rows.filter(r=>r.amount>0).length};
+}
+const baht=n=>Math.round(n).toLocaleString('th-TH');
+function feeRuleText(cfg){
+  const parts=[1,2,3].map(r=>{const v=+cfg['feeR'+r]||0;return v?`อันดับ ${r} ${v>=100?'ไม่ต้องจ่าย':'ลด '+fmt(v)+'%'}`:''}).filter(Boolean);
+  if(!parts.length)return 'หารเท่ากันทุกคน (ยังไม่ได้ตั้งส่วนลดให้อันดับ Fantasy)';
+  return `${parts.join(' · ')} (อันดับ Fantasy ${cfg.feeSeason?'รวมทั้งซีซั่น':'ของ GW นี้'}) · ส่วนที่ลดให้ คนเล่น Fantasy คนอื่น${cfg.feeAbsent?'':'ที่มาเตะ'}ช่วยกันหาร`}
+function feeCard(w){
+  const f=feeSplit(w),came=(w.attendees||[]).filter(id=>P(id)&&!P(id).managerOnly).length;
+  return `<section class="card feecard"><div class="sec-h"><h2>ค่าสนาม</h2>${f?`<span class="pill ${f.paidN===f.payN?'ok':''}">จ่ายแล้ว ${f.paidN}/${f.payN}</span>`:''}</div>
+   ${f?`<div class="small muted">รวม ${baht(f.total)} บาท · มา ${came} คน · หารปกติคนละ ${baht(Math.ceil(f.base))}${f.extra?` · Fantasy ช่วยจ่ายเพิ่มคนละ ${baht(Math.ceil(f.extra))}`:''}</div>`:`<div class="small muted">ใส่ค่าสนามวันนี้ แล้วระบบหารให้ พร้อมใบสรุปยอดโอน</div>`}
+   <button class="btn ${f?'':'pri'} bigbtn" data-act="feeSheet">${f?'ดูยอดแต่ละคน · ใบสรุปยอดโอน':'ใส่ค่าสนาม'}</button></section>`}
+function sheetFee(w){
+  const fee=w.fee||{},f=feeSplit(w);
+  const last=Object.values(S.weeks).filter(x=>x.fee?.payee&&x.id!==w.id).sort((a,b)=>b.date<a.date?-1:1)[0]?.fee||{};
+  const payee=fee.payee??last.payee??'',acct=fee.acct??last.acct??'';
+  const tag=r=>r.disc?`<span class="pill ok">Fantasy อันดับ ${r.rank} · ${r.disc>=1?'ฟรี':'ลด '+fmt(r.disc*100)+'%'}</span>`:r.extra?`<span class="pill">Fantasy +${baht(Math.ceil(r.extra))}</span>`:'';
+  return `${shHead('ค่าสนาม GW'+gwNo(w))}
+   <div class="feeform">
+    <label class="fld"><span>ค่าสนามรวม (บาท)</span><input id="feeTotal" type="number" inputmode="numeric" min="0" step="1" value="${fee.total||''}" placeholder="เช่น 2400"></label>
+    <label class="fld"><span>โอนให้</span><input id="feePayee" type="text" value="${esc(payee)}" placeholder="ชื่อคนเก็บเงิน"></label>
+    <label class="fld"><span>เลขบัญชี / พร้อมเพย์</span><input id="feeAcct" type="text" value="${esc(acct)}" placeholder="เช่น 081-234-5678 (พร้อมเพย์)"></label>
+    <button class="btn pri bigbtn" data-act="feeSave" data-w="${w.id}">${f?'บันทึก':'คิดเงิน'}</button>
+   </div>
+   <div class="small muted">${esc(feeRuleText(f?f.cfg:wcfg(w)))} · แอดมินตั้งเกณฑ์ได้ที่หน้ากติกา</div>
+   ${f?`<div class="feesum"><div><b class="num">${baht(Math.ceil(f.base))}</b><span>หารปกติ/คน</span></div><div><b class="num">${f.extra?'+'+baht(Math.ceil(f.extra)):'–'}</b><span>Fantasy ช่วยเพิ่ม/คน</span></div><div><b class="num">${f.paidN}/${f.payN}</b><span>จ่ายแล้ว</span></div></div>
+    ${f.spreadAll?'<div class="small" style="color:var(--warn)">ไม่มีคนเล่น Fantasy คนอื่นมาช่วยจ่าย เลยหารส่วนที่ลดให้กับทุกคนที่มาแทน</div>':''}
+    <span class="lbl">กดชื่อเพื่อติ๊กว่าโอนแล้ว</span>
+    <div class="group">${f.rows.map(r=>`<button class="gi feerow" data-act="feePaid" data-w="${w.id}" data-pid="${r.id}" aria-pressed="${r.paid}" ${r.amount?'':'disabled'}>
+      ${avatar(r.id,'s')}<span class="grow">${esc(nm(r.id))}${r.came?'':' <span class="small muted">(ไม่ได้มาเตะ)</span>'}<span class="sub">${tag(r)}</span></span>
+      <b class="num">${r.amount?baht(r.amount):'ฟรี'}</b><span class="box">${TICK}</span></button>`).join('')}</div>
+    <div class="small muted">รวมที่เก็บได้ ${baht(f.collect)} บาท จากค่าสนาม ${baht(f.total)} (ปัดขึ้นเป็นบาทเต็ม)</div>
+    <button class="btn pri bigbtn" data-act="feeImg" data-w="${w.id}">สร้างใบสรุปยอดโอน</button>`:''}`;
+}
+async function drawFeeSheet(w){
+  const f=feeSplit(w),fee=w.fee||{};
+  const K={bg:'#FFFFFF',card:'#F1F5F2',line:'#DCE4DE',ink:'#13201A',muted:'#5E6F65',turf:'#1F8F5A',gold:'#A87400'};
+  const FD='"Chakra Petch","Anuphan",sans-serif',FB='"Anuphan","Noto Sans Thai",sans-serif';
+  try{await Promise.all(['700 40px "Chakra Petch"','700 30px Anuphan','500 30px Anuphan','600 30px Anuphan'].map(x=>document.fonts.load(x,'กขAa0')))}catch{}
+  const W=1080,PAD=56,cv=document.createElement('canvas');cv.width=W;cv.height=6000;const g=cv.getContext('2d');g.direction='ltr';
+  g.fillStyle=K.bg;g.fillRect(0,0,W,cv.height);
+  const rr=(x,y,w2,h,r,fill)=>{g.beginPath();g.roundRect(x,y,w2,h,r);g.fillStyle=fill;g.fill()};
+  const txt=(t,x,y,{font=`500 28px ${FB}`,color=K.ink,align='left',max}={})=>{g.font=font;g.fillStyle=color;g.textAlign='left';let s2=String(t);if(max){while(g.measureText(s2).width>max&&s2.length>1)s2=s2.slice(0,-2)+'…'}const wd=g.measureText(s2).width;g.fillText(s2,align==='right'?x-wd:align==='center'?x-wd/2:x,y);return wd};
+  g.fillStyle=K.turf;g.fillRect(0,0,W,10);let y=88;
+  txt('7s FANTASY',PAD,y,{font:`700 30px ${FD}`,color:K.turf});
+  y+=72;txt('ค่าสนาม GW'+gwNo(w),PAD,y,{font:`700 72px ${FD}`});
+  y+=46;txt(thDate(w.date,true),PAD,y,{font:`500 30px ${FB}`,color:K.muted});
+  y+=40;rr(PAD,y,W-PAD*2,fee.acct||fee.payee?190:120,20,K.card);
+  txt('รวม',PAD+32,y+54,{font:`600 26px ${FB}`,color:K.muted});txt(baht(f.total)+' บาท',PAD+32,y+100,{font:`700 44px ${FD}`});
+  txt('หารปกติ/คน',W/2+20,y+54,{font:`600 26px ${FB}`,color:K.muted});txt(baht(Math.ceil(f.base)),W/2+20,y+100,{font:`700 44px ${FD}`});
+  if(fee.acct||fee.payee){txt('โอนให้ '+(fee.payee||''),PAD+32,y+152,{font:`600 28px ${FB}`,max:W/2-PAD});txt(fee.acct||'',W-PAD-32,y+154,{font:`700 34px ${FD}`,color:K.turf,align:'right',max:W/2-PAD})}
+  y+=(fee.acct||fee.payee?190:120)+56;
+  txt('ยอดที่ต้องโอน',PAD,y,{font:`700 34px ${FD}`});g.fillStyle=K.turf;g.fillRect(PAD,y+14,56,5);y+=54;
+  const rows=f.rows;
+  rows.forEach((r,i)=>{const h=64;if(i%2===0)rr(PAD,y,W-PAD*2,h,12,K.card);
+    txt(nm(r.id),PAD+24,y+42,{font:`600 30px ${FB}`,max:440});
+    const note=r.disc?`Fantasy อันดับ ${r.rank} · ${r.disc>=1?'ฟรี':'ลด '+fmt(r.disc*100)+'%'}`:r.extra?`รวม Fantasy +${baht(Math.ceil(r.extra))}`:(r.came?'':'');
+    if(note)txt(note,PAD+500,y+41,{font:`500 24px ${FB}`,color:r.disc?K.turf:K.muted,max:300});
+    txt(r.amount?baht(r.amount):'ฟรี',W-PAD-24,y+43,{font:`700 32px ${FD}`,color:r.amount?K.ink:K.turf,align:'right'});
+    y+=h});
+  y+=30;g.fillStyle=K.line;g.fillRect(PAD,y,W-PAD*2,2);y+=44;
+  const rule=feeRuleText(f.cfg);g.font=`500 23px ${FB}`;
+  const words=rule.split(' ');let line='';for(const wd of words){const t=line?line+' '+wd:wd;if(g.measureText(t).width>W-PAD*2){txt(line,PAD,y,{font:`500 23px ${FB}`,color:K.muted});y+=34;line=wd}else line=t}
+  if(line){txt(line,PAD,y,{font:`500 23px ${FB}`,color:K.muted});y+=34}
+  txt(`รวมเก็บได้ ${baht(f.collect)} บาท (ปัดขึ้นเป็นบาทเต็ม)`,PAD,y,{font:`500 23px ${FB}`,color:K.muted});y+=50;
+  const out=document.createElement('canvas');out.width=W;out.height=y;out.getContext('2d').drawImage(cv,0,0);return out;
 }
 
 /* ---------- bottom sheets (player / match / manage) ---------- */
@@ -845,10 +966,11 @@ function renderSheet(){
   const root=$('#sheetRoot');if(!root)return;
   const sh=S.sheet;let html='';
   if(sh){const w=S.weeks[S.weekId];
-    html=!w||S.tab!=='week'?'':sh.k==='player'?sheetPlayer(w,sh.pid):sh.k==='match'?sheetMatch(w,sh.mid):sh.k==='manage'?sheetManage(w):'';
+    html=!w||S.tab!=='week'?'':sh.k==='player'?sheetPlayer(w,sh.pid):sh.k==='match'?sheetMatch(w,sh.mid):sh.k==='manage'?sheetManage(w):sh.k==='fee'?sheetFee(w):'';
     if(!html)S.sheet=null;}
   const full=html?`<div class="sscrim" data-act="sheetScrim"><div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>${html}</div></div>`:'';
   if(root.dataset.h===full)return;
+  const ae=document.activeElement;if(full&&ae&&root.contains(ae)&&/^(INPUT|SELECT|TEXTAREA)$/.test(ae.tagName))return;
   const sc=root.querySelector('.sheet')?.scrollTop||0;
   root.innerHTML=full;root.dataset.h=full;
   const n=root.querySelector('.sheet');if(n)n.scrollTop=sc;
@@ -873,7 +995,7 @@ function sheetPlayer(w,pid){
 }
 function sheetMatch(w,mid){
   const m=S.matches[mid];if(!m||m.weekId!==w.id)return '';
-  const ms=matchesOf(w.id),no=ms.indexOf(m)+1,[a,b]=score(m),disp=isDisputed(m);
+  const ms=matchesOf(w.id),no=ms.indexOf(m)+1,[a,b]=score(m),disp=isDisputed(m),ko=kickoffs(w)[m.id];
   const s=mStatus(m)||['ยังไม่เตะ','wait'];
   const votes=Object.entries(m.votes||{}).filter(([,x])=>x&&x.v);
   const up=votes.filter(([,x])=>x.v===1).length,dn=votes.filter(([,x])=>x.v===-1);
@@ -881,7 +1003,8 @@ function sheetMatch(w,mid){
   const gkTxt=['a','b'].map(sd=>{const g=m.gk?.[sd];const tn=esc(teamName(w,sd==='a'?m.a:m.b));return g?`${tn} ${g==='loan'?'ยืมตัว':esc(nm(g))+' (ไม่นับแต้ม)'}`:''}).filter(Boolean).join(' · ');
   const evs=m.events||[];
   return `${shHead(`แมตช์ที่ ${no} · GW${gwNo(w)}`,`<span class="stchip ${s[1]}">${s[0]==='นับแล้ว'?'นับแต้มแล้ว':s[0]}</span>`)}
-   <div class="bigboard boardbox"><div class="t">${bibEl(w,m.a)}<span>${esc(teamName(w,m.a))}</span></div><div class="s tn" ${m.played||m.live?'style="color:var(--score)"':''}>${m.played||m.live?`${a}–${b}`:'<span class="vs">VS</span>'}</div><div class="t">${bibEl(w,m.b)}<span>${esc(teamName(w,m.b))}</span></div></div>
+   <div class="bigboard boardbox"><div class="t">${bibEl(w,m.a)}<span>${esc(teamName(w,m.a))}</span>${ko==='a'?`<span class="kotag">${KO} เขี่ยก่อน</span>`:''}</div><div class="s tn" ${m.played||m.live?'style="color:var(--score)"':''}>${m.played||m.live?`${a}–${b}`:'<span class="vs">VS</span>'}</div><div class="t">${bibEl(w,m.b)}<span>${esc(teamName(w,m.b))}</span>${ko==='b'?`<span class="kotag">${KO} เขี่ยก่อน</span>`:''}</div></div>
+   ${!m.played&&!m.live&&!w.closed?`<button class="btn ghost" data-act="koFlip" data-m="${m.id}" style="justify-self:start">สลับทีมที่เขี่ยก่อน${m.ko?' · <span class="small">(แก้เองแล้ว)</span>':''}</button>`:''}
    ${evs.length?`<div class="evbox">${evs.map((e,i)=>evLine(w,m,e,i,false)).join('')}</div>`:m.played?'<div class="small muted">ไม่มีประตู</div>':''}
    ${m.played||m.live?`<div class="small muted">${gkTxt?'โกล: '+gkTxt+' · ':''}บันทึกโดย ${esc(m.by?nm(m.by):'ไม่ระบุ')}</div>`:''}
    ${dn.length?`<div class="why" style="grid-column:auto">${dn.map(([pid,x])=>`<b>${esc(nm(pid))}</b> ค้าน: ${esc(x.why||'ไม่ได้ให้เหตุผล')}`).join('<br>')}</div>`:''}
@@ -1344,20 +1467,25 @@ async function drawSchedule(w,light){
   y+=70;
   // fixtures
   y=section(any?'ผลและโปรแกรม':'โปรแกรมการแข่ง',y);
+  const ko=kickoffs(w);
+  const ball=(cx,cy,r=11)=>{g.beginPath();g.arc(cx,cy,r,0,Math.PI*2);g.fillStyle='#FFFFFF';g.fill();g.lineWidth=2;g.strokeStyle=light?'#13201A':'#0E1813';g.stroke();
+    g.beginPath();for(let i=0;i<5;i++){const t=-Math.PI/2+i*2*Math.PI/5;g.lineTo(cx+Math.cos(t)*r*.42,cy+Math.sin(t)*r*.42)}g.closePath();g.fillStyle='#13201A';g.fill()};
   for(const [k,m] of ms.entries()){const [a,b]=score(m);const evs=(m.events||[]);
     const sa=evs.filter(e=>e.side==='a'),sb=evs.filter(e=>e.side==='b');const lbl=e=>e.type==='og'?nm(e.scorer)+' (OG)':scorerLbl(e);
     const lines=m.played||m.live?Math.max(sa.length,sb.length):0;const h=92+lines*30;
     rr(PAD,y,W-PAD*2,h,16,m.live?K.live:K.card);
     txt(k+1,PAD+30,y+56,{font:`700 26px ${FD}`,color:K.muted,align:'center'});
-    txt(teamName(w,m.a),W/2-110,y+56,{font:`700 30px ${FB}`,align:'right',max:300});bib(W/2-98,y+32,bibOf(w,m.a).c);
-    bib(W/2+76,y+32,bibOf(w,m.b).c);txt(teamName(w,m.b),W/2+110,y+56,{font:`700 30px ${FB}`,max:300});
+    const wa=txt(teamName(w,m.a),W/2-110,y+56,{font:`700 30px ${FB}`,align:'right',max:300});bib(W/2-98,y+32,bibOf(w,m.a).c);
+    bib(W/2+76,y+32,bibOf(w,m.b).c);const wb=txt(teamName(w,m.b),W/2+110,y+56,{font:`700 30px ${FB}`,max:300});
+    if(ko[m.id]==='a')ball(W/2-110-wa-22,y+46);else if(ko[m.id]==='b')ball(W/2+110+wb+22,y+46);
     if(m.played||m.live)txt(`${a} – ${b}`,W/2-11,y+60,{font:`700 40px ${FD}`,color:m.live?K.bad:K.gold,align:'center'});
     else txt('VS',W/2-11,y+58,{font:`700 28px ${FD}`,color:K.muted,align:'center'});
     if(m.live)txt('LIVE',W-PAD-24,y+56,{font:`700 22px ${FD}`,color:K.bad,align:'right'});
     for(let i=0;i<lines;i++){if(sa[i])txt(lbl(sa[i]),W/2-110,y+96+i*30,{font:`500 21px ${FB}`,color:K.muted,align:'right',max:300});if(sb[i])txt(lbl(sb[i]),W/2+110,y+96+i*30,{font:`500 21px ${FB}`,color:K.muted,max:300})}
     y+=h+12}
   const cnt=teams.map((t,i)=>`${t.name} ${ms.filter(m=>m.a===i||m.b===i).length}`).join(' · ');
-  txt('จำนวนนัด: '+cnt,PAD,y+20,{font:`500 22px ${FB}`,color:K.muted,max:W-PAD*2});y+=70;
+  txt('จำนวนนัด: '+cnt,PAD,y+20,{font:`500 22px ${FB}`,color:K.muted,max:W-PAD*2});y+=40;
+  ball(PAD+11,y+12,10);txt('= ทีมที่เขี่ยบอลก่อน',PAD+30,y+20,{font:`500 22px ${FB}`,color:K.muted});y+=60;
   // teams
   if(teams.length){y=section('รายชื่อทีม',y);const cols=2,cw=(W-PAD*2-20)/cols;
     for(let r=0;r<teams.length;r+=cols){const row=teams.slice(r,r+cols);const rowH=Math.max(...row.map(t=>((t.players||[]).filter(P).length+(t.loans||[]).length)*36))+80;
@@ -1560,6 +1688,13 @@ const ACT={
   pfPos:el=>{S.pf.pos=el.dataset.v;render()},pfMode:el=>{S.pf.mode=el.dataset.v;render()},
   exportFx:el=>openSchedule(el.dataset.w),
   exportStats:el=>openPlayerStats(el.dataset.w),
+  koFlip:async el=>{const m=S.matches[el.dataset.m],w=S.weeks[m.weekId],cur=kickoffs(w)[m.id];await save(()=>store.merge('matches',m.id,{ko:cur==='a'?'b':'a'}),'สลับทีมที่เขี่ยก่อนแล้ว')},
+  feeSheet:()=>openSheet({k:'fee'}),
+  feeSave:async el=>{if(!needMe())return;const w=S.weeks[el.dataset.w],t=Math.round(+$('#feeTotal').value||0);if(t<=0){toast('ใส่ค่าสนามรวมก่อน',true);return}
+    if(document.activeElement)document.activeElement.blur();
+    await save(()=>store.merge('weeks',w.id,{fee:{total:t,payee:($('#feePayee').value||'').trim().slice(0,40),acct:($('#feeAcct').value||'').trim().slice(0,40),by:S.me,at:Date.now()}}),'คิดค่าสนามแล้ว')},
+  feePaid:async el=>{if(!needMe())return;const w=S.weeks[el.dataset.w],id=el.dataset.pid,cur=!!w.fee?.paid?.[id];await save(()=>store.merge('weeks',w.id,{fee:{paid:{[id]:!cur}}}),(cur?'ยกเลิก: ':'โอนแล้ว: ')+nm(id))},
+  feeImg:el=>{const w=S.weeks[el.dataset.w];if(!feeSplit(w))return;showImage(()=>drawFeeSheet(w),`7s-GW${gwNo(w)}-fee-${w.date}.png`,'ใบสรุปยอดโอน GW'+gwNo(w),'')},
   schedTheme:el=>{lsSet('f7_schedTheme',el.dataset.v);openSchedule(el.dataset.w)},
   exportSeason:()=>openSeasonStats(),
   evName:el=>{const m=S.matches[el.dataset.m];if(!m)return;const ref=el.dataset.e?{eid:el.dataset.e}:{i:+el.dataset.i};

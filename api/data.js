@@ -47,8 +47,11 @@ async function write(req, res, body, me) {
     const e = adminCheck(req.headers['x-admin']);
     if (e) return res.status(403).json({ error: e });
   } else if (col === 'weeks') {
+    // the field-fee record (amount, who to pay, who has paid) can be filled in by any signed-in member, even after the GW is closed
+    const feeOnly = op === 'merge' && data && Object.keys(data).length > 0 && Object.keys(data).every((k) => k === 'fee');
+    if (feeOnly && !me) return res.status(403).json({ error: 'need_me' });
     const cur = parse(await redis.hget(key('weeks'), id));
-    if (cur && cur.closed) return res.status(403).json({ error: 'closed' });
+    if (cur && cur.closed && !feeOnly) return res.status(403).json({ error: 'closed' });
   }
   if (col === 'matches') {
     const cur = parse(await redis.hget(key('matches'), id));
