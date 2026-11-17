@@ -394,12 +394,12 @@ h2.sh{font-size:20px;font-family:var(--body);font-weight:700}
 <script>
 /* ---------- config & constants ---------- */
 const DEF_CFG={goalATT:2.5,goalDEF:5,assist:2,assistDEF:3,teamGoalATT:0.5,teamGoalCap:0,ownGoal:-2,win:1,csATT:0.5,defStart:1,defPerConceded:1,csDEF:2,
-  feeR1:100,feeR2:0,feeR3:0,feeSeason:0,feeAbsent:0,budget:30,squad:3,maxPerTeam:2,captain:2,priceNew:7,priceBase:5,priceSlope:0.5,priceMin:4,priceMax:15,formWeeks:4};
+  feeR1:100,feeR2:0,feeR3:0,feeSeason:0,feeAbsent:0,minATT:0,minDEF:0,budget:30,squad:3,maxPerTeam:2,captain:2,priceNew:7,priceBase:5,priceSlope:0.5,priceMin:4,priceMax:15,formWeeks:4};
 const CFG_LABELS=[
  ['goalATT','ประตู (ตัวบุก)'],['goalDEF','ประตู (ตัวรับ)'],['assist','แอสซิสต์ (ตัวบุก)'],['assistDEF','แอสซิสต์ (ตัวรับ)'],['teamGoalATT','ตัวบุก: ทีมยิง (ต่อลูกที่ทีมยิง)'],['teamGoalCap','เพดานทีมยิง (ลูก/แมตช์, 0 = ไม่จำกัด)'],['ownGoal','ทำเข้าประตูตัวเอง'],
  ['win','ทีมชนะ (ต่อแมตช์)'],['csATT','คลีนชีต (ตัวบุก)'],['defStart','แต้มตั้งต้นตัวรับ/แมตช์'],['defPerConceded','ตัวรับเสียแต้ม/ประตูที่โดน'],
  ['csDEF','โบนัสคลีนชีต (ตัวรับ)'],['feeR1','ค่าสนาม: ส่วนลด % อันดับ 1 Fantasy'],['feeR2','ค่าสนาม: ส่วนลด % อันดับ 2'],['feeR3','ค่าสนาม: ส่วนลด % อันดับ 3'],['feeSeason','ค่าสนาม: นับอันดับจาก (0 = GW นั้น, 1 = รวมซีซั่น)'],['feeAbsent','ค่าสนาม: คนเล่น Fantasy ที่ไม่ได้มาเตะช่วยหารด้วย (1 = ใช่, 0 = ไม่)'],['budget','งบต่อสัปดาห์'],['squad','จำนวนนักเตะที่เลือก'],['maxPerTeam','เลือกจากทีมเดียวกันได้ไม่เกิน'],['captain','ตัวคูณกัปตัน'],
- ['priceNew','ราคานักเตะใหม่'],['priceBase','ราคาฐาน'],['priceSlope','ราคาเพิ่ม/แต้มฟอร์ม'],['priceMin','ราคาต่ำสุด'],['priceMax','ราคาสูงสุด'],['formWeeks','ฟอร์มคิดจากกี่สัปดาห์ล่าสุด']];
+ ['minATT','ทีม Fantasy: ต้องมีตัวบุกอย่างน้อย (0 = ไม่บังคับ)'],['minDEF','ทีม Fantasy: ต้องมีตัวรับอย่างน้อย (0 = ไม่บังคับ)'],['priceNew','ราคานักเตะใหม่'],['priceBase','ราคาฐาน'],['priceSlope','ราคาเพิ่ม/แต้มฟอร์ม'],['priceMin','ราคาต่ำสุด'],['priceMax','ราคาสูงสุด'],['formWeeks','ฟอร์มคิดจากกี่สัปดาห์ล่าสุด']];
 const BIBS=[{n:'ส้ม',c:'#EE7A2E'},{n:'น้ำเงิน',c:'#2F5BD3'},{n:'ขาว',c:'#F4F4F0'},{n:'ดำ',c:'#26292A'},{n:'เหลือง',c:'#EBC11B'}];
 const POS_TH={ATT:'บุก',DEF:'รับ'};
 const TABS=[['home','ตาราง'],['week','แมตช์'],['team','ทีม Fantasy'],['players','นักเตะ'],['rules','กติกา']];
@@ -1035,6 +1035,11 @@ function sheetManage(w){
 }
 
 /* ----- fantasy team ----- */
+// squad shape: how many attackers/defenders a draft still needs to meet the minimums
+function posNeed(w,ids,cfg){const a=ids.filter(id=>posAt(w,id)==='ATT').length,d=ids.length-a;
+  return {a,d,needA:Math.max(0,(+cfg.minATT||0)-a),needD:Math.max(0,(+cfg.minDEF||0)-d)}}
+// the two squad formats the admin can switch between
+const FMT_PRESETS={p3:{squad:3,budget:30,minATT:0,minDEF:0},p4:{squad:4,budget:38,minATT:2,minDEF:2}};
 function vTeam(){
   const ws=weeksDesc();
   if(!S.teamWeekId||!S.weeks[S.teamWeekId])S.teamWeekId=ws[0]?.id||null;
@@ -1053,12 +1058,14 @@ function vTeam(){
   const slots=[...Array(cfg.squad)].map((_,i)=>{const id=d.players[i];if(!id)return `<div class="slot"><span class="muted small">ช่องที่ ${i+1}</span><span class="muted small">ว่าง</span></div>`;
     return `<div class="slot f"><button class="slot-x" data-act="pick" data-pid="${id}" aria-label="เอา ${esc(nm(id))} ออก">×</button><div style="display:grid;justify-items:center;gap:4px">${avatar(id,'m')}${posTag(P(id))}</div><div class="n">${esc(nm(id))}</div><div class="row" style="justify-content:center"><span class="num">${priceInfo(id,w.date).price}</span>${cfg.captain>1?`<button class="cap" data-act="cap" data-pid="${id}" aria-pressed="${d.captain===id}">C ×${fmt(cfg.captain)}</button>`:''}</div></div>`}).join('');
   const ovf=teamOverflow(w,d.players);
-  const ok=d.players.length===cfg.squad&&!over&&!ovf.length&&(cfg.captain<=1||d.players.includes(d.captain));
+  const pn=posNeed(w,d.players,cfg),posOk=!pn.needA&&!pn.needD,hasRule=(+cfg.minATT||0)+(+cfg.minDEF||0)>0;
+  const ok=d.players.length===cfg.squad&&!over&&!ovf.length&&posOk&&(cfg.captain<=1||d.players.includes(d.captain));
   return head+`<section class="card"><div class="sec-h"><div><div class="eyebrow">${esc(thDate(w.date,true))}</div><h2>ทีม Fantasy ของ ${esc(nm(S.me))}</h2></div>${ex?'<span class="pill ok">บันทึกแล้ว</span>':'<span class="pill warn">ยังไม่ได้ส่งทีม</span>'}</div>
    <div class="budget"><div class="row small"><span class="grow">ใช้ไป <b class="tn">${cost}</b> / ${cfg.budget}</span><b class="tn" style="color:${over?'var(--bad)':'var(--good)'}">${over?'เกินงบ '+(-left):'เหลือ '+left}</b></div><div class="bar ${over?'over':''}"><i style="width:${clamp(cost/cfg.budget*100,0,100)}%"></i></div></div>
+   ${hasRule?`<div class="row wrapx small"><span class="pill ${pn.needA?'warn':'ok'}">บุก ${pn.a}${cfg.minATT?'/'+cfg.minATT:''}</span><span class="pill ${pn.needD?'warn':'ok'}">รับ ${pn.d}${cfg.minDEF?'/'+cfg.minDEF:''}</span><span class="muted">ต้องมีบุกอย่างน้อย ${cfg.minATT||0} · รับอย่างน้อย ${cfg.minDEF||0}</span></div>`:''}
    <div class="slots">${slots}</div>
    <div class="row wrapx"><button class="btn pri" data-act="savePick" ${ok?'':'disabled'}>${ex?'อัปเดตทีม':'ส่งทีม'}</button>
-   <span class="small muted grow">${ovf.length?`เลือกจาก${esc(teamName(w,ovf[0]))}เกิน ${cfg.maxPerTeam} คน (ทีมอาจถูกจัดใหม่) เปลี่ยนคนก่อนส่ง`:d.players.length<cfg.squad?`เลือกอีก ${cfg.squad-d.players.length} คน`:over?'เกินงบ เปลี่ยนตัวที่ถูกกว่า':cfg.captain>1&&!d.players.includes(d.captain)?'กดปุ่ม C เลือกกัปตัน 1 คน':'พร้อมส่ง แก้ได้จนกว่าจะล็อก'}</span></div></section>
+   <span class="small muted grow">${d.players.length===cfg.squad&&!posOk?`ต้องมี${pn.needA?'ตัวบุก':'ตัวรับ'}อีก ${pn.needA||pn.needD} คน`:ovf.length?`เลือกจาก${esc(teamName(w,ovf[0]))}เกิน ${cfg.maxPerTeam} คน (ทีมอาจถูกจัดใหม่) เปลี่ยนคนก่อนส่ง`:d.players.length<cfg.squad?`เลือกอีก ${cfg.squad-d.players.length} คน`:over?'เกินงบ เปลี่ยนตัวที่ถูกกว่า':cfg.captain>1&&!d.players.includes(d.captain)?'กดปุ่ม C เลือกกัปตัน 1 คน':'พร้อมส่ง แก้ได้จนกว่าจะล็อก'}</span></div></section>
   ${sentCard(w)}
   <section class="card"><div class="sec-h"><h2>ตลาดนักเตะ</h2><span class="small muted">${att.length?'เฉพาะคนที่เช็คชื่อมาสัปดาห์นี้':'ยังไม่เช็คชื่อ จึงแสดงทุกคน'}</span></div>
    <div class="list" style="gap:2px">${pool.map(({p,price,form})=>`<button class="pk" data-act="pick" data-pid="${p.id}" aria-pressed="${d.players.includes(p.id)}" style="grid-template-columns:auto 1fr auto"><span>${avatar(p.id,'m')}</span><span>${posTagW(w,p.id,false)} <b>${esc(nm(p.id))}</b>${teamIdxOf(w,p.id)>=0?` <span class="small muted" style="white-space:nowrap">${bibEl(w,teamIdxOf(w,p.id))} ${esc(teamName(w,teamIdxOf(w,p.id)))}</span>`:''}<br><span class="small muted">${form==null?'ยังไม่มีฟอร์ม':'ฟอร์ม '+fmt(form)+' แต้ม/สัปดาห์'}</span></span><span class="price">${price}</span></button>`).join('')||'<div class="empty small">ไม่มีนักเตะให้เลือก</div>'}</div></section>`;
@@ -1199,7 +1206,7 @@ function vRules(){
    <p class="small muted" style="margin:6px 0 0">= ${fmt(c.defStart)} − ${fmt(c.defPerConceded)}×ลูกที่เสีย และบวก ${fmt(c.csDEF)} ถ้าไม่เสียเลย ติดลบได้</p></div>
    <ul class="small" style="margin:0;padding-left:18px;display:grid;gap:4px">
     <li>ผู้เล่นยืมตัวไม่ได้แต้ม แต่ประตูที่ยิงยังนับในสกอร์ คนในก๊วนที่ยืนโกลแมตช์ไหน ไม่ได้แต้มแมตช์นั้น</li>
-    <li>เลือก ${c.squad} คนต่อสัปดาห์ งบ ${c.budget} ห้ามเลือกตัวเอง เลือกจากทีมเดียวกันได้ไม่เกิน ${c.maxPerTeam} คน (นับตามทีมที่จัดในสัปดาห์นั้น) ${c.captain>1?`กัปตันได้แต้ม ×${fmt(c.captain)}`:''}</li>
+    <li>เลือก ${c.squad} คนต่อสัปดาห์${(+c.minATT||+c.minDEF)?` (บุกอย่างน้อย ${c.minATT||0} รับอย่างน้อย ${c.minDEF||0})`:''} งบ ${c.budget} ห้ามเลือกตัวเอง เลือกจากทีมเดียวกันได้ไม่เกิน ${c.maxPerTeam} คน (นับตามทีมที่จัดในสัปดาห์นั้น) ${c.captain>1?`กัปตันได้แต้ม ×${fmt(c.captain)}`:''}</li>
     <li>ราคา = ${fmt(c.priceBase)} + ${fmt(c.priceSlope)}×ฟอร์ม (ปัดเศษ, ${c.priceMin}–${c.priceMax}) คนใหม่ราคา ${c.priceNew}</li>
     <li>แอดมินกด "ปิด GW" หลังเตะครบ แล้วแต้ม GW นั้นจะล็อกถาวร ไม่เปลี่ยนตามการโหวต การย้ายคน หรือการปรับค่าแต้มทีหลัง</li>
     <li>ปรับตำแหน่งบุก/รับเฉพาะ GW ได้ในหน้าแมตช์ (กดป้ายหน้าชื่อในการ์ดทีม) จนกว่าจะล็อก ไม่กระทบตำแหน่งปกติในโปรไฟล์</li>
@@ -1207,6 +1214,9 @@ function vRules(){
     <li>ล็อก/ปลดล็อกการเลือกทีม Fantasy ต้องใช้รหัสผู้ดูแล (ระบบล็อกเองเมื่อบันทึกผลแมตช์แรก)</li>
     <li>แต่ละคนมีรหัส 4–6 หลักของตัวเอง ทีม Fantasy และโหวตแก้ได้เฉพาะเจ้าของชื่อที่ใส่รหัสแล้ว</li>
     <li>ใครก็บันทึกผลได้ ถ้าไม่มีคนกดค้าน แต้มนับทันที ถ้ามีคนค้าน แมตช์นั้นไม่นับจนกว่าจะมีคนแก้ผล (แก้แล้วโหวตเริ่มใหม่)</li></ul></section>
+  <section class="card"><div class="sec-h"><h2>รูปแบบทีม Fantasy <span class="pill warn">เฉพาะแอดมิน</span></h2></div>
+   <div class="seg" role="group" aria-label="รูปแบบทีม">${[['p3','3 คน · งบ 30'],['p4','4 คน · บุก 2 รับ 2 · งบ 38']].map(([k,l])=>{const v=FMT_PRESETS[k],on=Object.keys(v).every(x=>(+c[x]||0)===v[x]);return `<button data-act="fmtPreset" data-v="${k}" aria-pressed="${on}">${l}</button>`}).join('')}</div>
+   <p class="small muted" style="margin:0">ใช้กับ GW ที่ยังไม่ล็อก ทีมที่ส่งไว้แล้วใน GW ที่ยังไม่ล็อกต้องส่งใหม่ให้ตรงรูปแบบ · ปรับละเอียดได้ในช่องด้านล่าง</p></section>
   <section class="card"><div class="sec-h"><h2>ปรับค่าแต้ม <span class="pill warn">เฉพาะแอดมิน</span></h2><button class="btn sm ghost" data-act="cfgReset">คืนค่าเริ่มต้น</button></div>
    <p class="small muted" style="margin:0">ต้องใช้รหัสผู้ดูแลตอนบันทึก · เปลี่ยนแล้วแต้มของ GW ที่ยังไม่ปิดจะคำนวณใหม่ GW ที่ปิดแล้วไม่เปลี่ยน</p>
    <div class="cfg">${CFG_LABELS.map(([k,l])=>`<div class="field"><label for="cfg_${k}">${l}</label><input type="number" step="0.5" id="cfg_${k}" value="${c[k]}"></div>`).join('')}</div>
@@ -1806,6 +1816,7 @@ const ACT={
   pick:el=>{const w=S.weeks[S.teamWeekId],d=S.draft[w.id],id=el.dataset.pid,cfg=S.config;
     if(d.players.includes(id)){d.players=d.players.filter(x=>x!==id);if(d.captain===id)d.captain=d.players[0]||null}
     else{if(d.players.length>=cfg.squad){toast('ครบ '+cfg.squad+' คนแล้ว เอาคนออกก่อน',true);return}
+      {const n=posNeed(w,[...d.players,id],cfg),left=cfg.squad-d.players.length-1;if(n.needA+n.needD>left){toast(n.needD?'ต้องมีตัวรับอย่างน้อย '+cfg.minDEF+' คน เลือกตัวรับก่อน':'ต้องมีตัวบุกอย่างน้อย '+cfg.minATT+' คน เลือกตัวบุกก่อน',true);return}}
       if(teamOverflow(w,[...d.players,id]).length){toast('เลือกจาก'+teamName(w,teamIdxOf(w,id))+'ได้ไม่เกิน '+cfg.maxPerTeam+' คน',true);return}d.players.push(id);if(!d.captain)d.captain=id}
     render()},
   cap:el=>{const d=S.draft[S.teamWeekId];d.captain=el.dataset.pid;render()},
@@ -1813,6 +1824,7 @@ const ACT={
     if(teamOverflow(w,d.players).length){toast('เลือกจากทีมเดียวกันเกิน '+S.config.maxPerTeam+' คน',true);return}
     const cost=d.players.reduce((s,id)=>s+priceInfo(id,w.date).price,0);
     await save(()=>store.set('picks',w.id+'_'+S.me,{weekId:w.id,manager:S.me,players:d.players,captain:d.captain,cost,at:Date.now()}),'ส่งทีมแล้ว')},
+  fmtPreset:el=>{const v=FMT_PRESETS[el.dataset.v];if(!v)return;withAdmin(()=>save(()=>store.set('config','scoring',{...S.config,...v}),'เปลี่ยนเป็น '+v.squad+' คน งบ '+v.budget+' แล้ว'))},
   cfgSave:async()=>{const o={};for(const [k] of CFG_LABELS){const v=parseFloat($('#cfg_'+k).value);o[k]=isFinite(v)?v:DEF_CFG[k]}o.squad=clamp(Math.round(o.squad),1,6);o.maxPerTeam=clamp(Math.round(o.maxPerTeam),1,6);o.formWeeks=clamp(Math.round(o.formWeeks),1,20);
     withAdmin(()=>save(()=>store.set('config','scoring',o),'บันทึกค่าแต้มแล้ว'))},
   cfgReset:()=>{withAdmin(()=>save(()=>store.set('config','scoring',{...DEF_CFG}),'คืนค่าเริ่มต้นแล้ว'))},
