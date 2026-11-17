@@ -258,6 +258,9 @@ td.r,th.r{text-align:right}
 .feerow[aria-pressed="true"] .box svg{opacity:1}
 .feerow:disabled{opacity:.7;cursor:default}
 .feecard .bigbtn{min-height:52px}
+.sentlist{display:grid;gap:2px}
+.sentrow{display:flex;align-items:center;gap:10px;min-height:48px;padding:4px 6px;border-bottom:1px solid var(--line)}
+.sentrow:last-child{border-bottom:0}
 /* match page: steps, big touch targets */
 :root{--score:#9A6A00}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--score:#F2C14E}}
@@ -535,7 +538,7 @@ let busy=false;
 async function refresh(force){
   if(busy&&!force)return;busy=true;
   try{
-    const r=await fetch('/api/data'+(force||srvVer<0?'':'?since='+srvVer),{cache:'no-store'});
+    const r=await fetch('/api/data'+(force||srvVer<0?'':'?since='+srvVer),{cache:'no-store',headers:{'x-me':S.me||'','x-tok':lsGet('f7_tok')||''}});
     const j=await r.json();
     if(!r.ok)throw j;
     API=true;
@@ -1039,7 +1042,7 @@ function vTeam(){
   const head=`<div class="row wrapx"><select data-change="teamWeekSel" aria-label="เลือกสัปดาห์">${ws.map(x=>`<option value="${x.id}" ${x.id===S.teamWeekId?'selected':''}>${esc(gwLabel(x))}${isLocked(x)?' · ล็อกแล้ว':''}</option>`).join('')||'<option>ยังไม่มีสัปดาห์</option>'}</select></div>`;
   if(!w)return head+`<div class="card empty">ยังไม่มีสัปดาห์ให้เลือกทีม สร้างได้ที่แท็บแมตช์</div>`;
   if(isLocked(w))return head+lockedView(w);
-  if(!S.me)return head+`<div class="card empty"><b>คุณคือใคร?</b><span>เลือกชื่อตัวเองที่มุมขวาบนก่อน ระบบจะได้กันไม่ให้เลือกตัวเอง</span></div>`;
+  if(!S.me)return head+`<div class="card empty"><b>คุณคือใคร?</b><span>เลือกชื่อตัวเองที่มุมขวาบนก่อน ระบบจะได้กันไม่ให้เลือกตัวเอง</span></div>`+sentCard(w);
   const cfg=S.config,key=w.id+'_'+S.me,ex=S.picks[key];
   const d=S.draft[w.id]||(S.draft[w.id]=ex?{players:[...ex.players],captain:ex.captain}:{players:[],captain:null});
   d.players=d.players.filter(P);
@@ -1056,8 +1059,24 @@ function vTeam(){
    <div class="slots">${slots}</div>
    <div class="row wrapx"><button class="btn pri" data-act="savePick" ${ok?'':'disabled'}>${ex?'อัปเดตทีม':'ส่งทีม'}</button>
    <span class="small muted grow">${ovf.length?`เลือกจาก${esc(teamName(w,ovf[0]))}เกิน ${cfg.maxPerTeam} คน (ทีมอาจถูกจัดใหม่) เปลี่ยนคนก่อนส่ง`:d.players.length<cfg.squad?`เลือกอีก ${cfg.squad-d.players.length} คน`:over?'เกินงบ เปลี่ยนตัวที่ถูกกว่า':cfg.captain>1&&!d.players.includes(d.captain)?'กดปุ่ม C เลือกกัปตัน 1 คน':'พร้อมส่ง แก้ได้จนกว่าจะล็อก'}</span></div></section>
+  ${sentCard(w)}
   <section class="card"><div class="sec-h"><h2>ตลาดนักเตะ</h2><span class="small muted">${att.length?'เฉพาะคนที่เช็คชื่อมาสัปดาห์นี้':'ยังไม่เช็คชื่อ จึงแสดงทุกคน'}</span></div>
    <div class="list" style="gap:2px">${pool.map(({p,price,form})=>`<button class="pk" data-act="pick" data-pid="${p.id}" aria-pressed="${d.players.includes(p.id)}" style="grid-template-columns:auto 1fr auto"><span>${avatar(p.id,'m')}</span><span>${posTagW(w,p.id,false)} <b>${esc(nm(p.id))}</b>${teamIdxOf(w,p.id)>=0?` <span class="small muted" style="white-space:nowrap">${bibEl(w,teamIdxOf(w,p.id))} ${esc(teamName(w,teamIdxOf(w,p.id)))}</span>`:''}<br><span class="small muted">${form==null?'ยังไม่มีฟอร์ม':'ฟอร์ม '+fmt(form)+' แต้ม/สัปดาห์'}</span></span><span class="price">${price}</span></button>`).join('')||'<div class="empty small">ไม่มีนักเตะให้เลือก</div>'}</div></section>`;
+}
+// who has sent a team for this GW (lineups stay hidden until the GW locks)
+function sentCard(w){
+  const sent=Object.values(S.picks).filter(k=>k.weekId===w.id&&!k.demo&&P(k.manager));
+  const sentS=new Set(sent.map(k=>k.manager));
+  const past=new Set(Object.values(S.picks).filter(k=>!k.demo&&k.weekId!==w.id).map(k=>k.manager));
+  // "not yet" lists people who have played fantasy before, not everyone who comes to play
+  const pool=[...new Set([...past,...sentS])].filter(id=>P(id));
+  const not=pool.filter(id=>!sentS.has(id)).sort((a,b)=>nm(a).localeCompare(nm(b),'th'));
+  const ago=t=>{if(!t)return '';const m=Math.round((Date.now()-t)/60000);return m<1?'เมื่อกี้':m<60?m+' นาทีที่แล้ว':m<1440?Math.round(m/60)+' ชม.ที่แล้ว':Math.round(m/1440)+' วันที่แล้ว'};
+  sent.sort((a,b)=>(b.at||0)-(a.at||0));
+  return `<section class="card"><div class="sec-h"><h2>ใครส่งทีมแล้ว</h2><span class="pill ${not.length?'':'ok'}">ส่งแล้ว ${sent.length}${pool.length?'/'+pool.length:''}</span></div>
+   <p class="small muted" style="margin:0">ทีมของแต่ละคนจะเปิดให้เห็นตอนเริ่มเตะแมตช์แรก</p>
+   ${sent.length?`<div class="sentlist">${sent.map(k=>`<div class="sentrow">${avatar(k.manager,'s')}<span class="grow">${esc(nm(k.manager))}${k.manager===S.me?' <span class="small muted">(คุณ)</span>':''}</span><span class="small muted">${ago(k.at)}</span><span class="pill ok">ส่งแล้ว</span></div>`).join('')}</div>`:'<div class="small muted">ยังไม่มีใครส่งทีม</div>'}
+   ${not.length?`<div class="small muted">คนที่เคยเล่นแต่ยังไม่ส่ง (${not.length}): ${not.map(id=>esc(nm(id))).join(' · ')}</div>`:''}</section>`;
 }
 function lockedView(w){
   const ms=matchesOf(w.id),bw=calc().byWeek[w.id]||{},cap=wcfg(w).captain;
@@ -1197,8 +1216,8 @@ function vRules(){
 
 /* ---------- welcome: who are you ---------- */
 let gateShown=false,gateQ='';
-function setMe(id,tok){S.me=id;lsSet('f7_me',id);if(tok)lsSet('f7_tok',tok);closeModal();render();toast('สวัสดี '+nm(id))}
-function forgetMe(){S.me=null;lsSet('f7_me',null);lsSet('f7_tok',null);render()}
+function setMe(id,tok){S.me=id;lsSet('f7_me',id);if(tok)lsSet('f7_tok',tok);closeModal();render();toast('สวัสดี '+nm(id));refresh(true)}
+function forgetMe(){S.me=null;lsSet('f7_me',null);lsSet('f7_tok',null);render();refresh(true)}
 async function authCall(body){const r=await fetch('/api/auth',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});return {ok:r.ok,status:r.status,j:await r.json().catch(()=>({}))}}
 async function becomeMe(pid,fresh){
   if(!API){setMe(pid);return}

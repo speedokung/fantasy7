@@ -171,6 +171,15 @@ export default async function handler(req, res) {
         data[c] = {};
         for (const [id, v] of Object.entries(rows[i] || {})) data[c][id] = parse(v);
       });
+      // before a GW's picks lock, nobody sees anyone else's lineup: only that they've sent one
+      const me = whoIs(req);
+      const started = new Set(Object.values(data.matches).filter((m) => m && (m.played || m.live)).map((m) => m.weekId));
+      const open = (wk) => wk && !wk.closed && (wk.unlocked || (!wk.locked && !started.has(wk.date || '')));
+      for (const [id, pk] of Object.entries(data.picks)) {
+        if (!pk || pk.manager === me || pk.demo) continue;
+        const wk = data.weeks[pk.weekId];
+        if (open(wk ? { ...wk, date: pk.weekId } : null)) data.picks[id] = { weekId: pk.weekId, manager: pk.manager, at: pk.at || null, hidden: true };
+      }
       return res.json({ ver, data });
     }
 
